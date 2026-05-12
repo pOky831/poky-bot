@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= guild.name %> | Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+  <canvas id="animated-bg"></canvas>
+  <div class="floating-shapes">
+    <div class="float-circle"></div><div class="float-circle"></div><div class="float-circle"></div>
+    <div class="float-circle"></div><div class="float-circle"></div><div class="float-circle"></div>
+    <div class="particle-dot"></div><div class="particle-dot"></div><div class="particle-dot"></div>
+    <div class="particle-dot"></div><div class="particle-dot"></div>
+  </div>
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <svg class="logo-icon" width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="50" cy="54" rx="44" ry="42" fill="#f799b9"/>
+        <ellipse cx="34" cy="46" rx="6" ry="12" fill="#2d1f2c"/>
+        <ellipse cx="32" cy="42" rx="2.5" ry="5" fill="white"/>
+        <ellipse cx="66" cy="46" rx="6" ry="12" fill="#2d1f2c"/>
+        <ellipse cx="64" cy="42" rx="2.5" ry="5" fill="white"/>
+        <path d="M42 61 Q50 67 58 61" stroke="#2d1f2c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <ellipse cx="26" cy="57" rx="7" ry="5" fill="#e0739d" opacity="0.6"/>
+        <ellipse cx="74" cy="57" rx="7" ry="5" fill="#e0739d" opacity="0.6"/>
+        <ellipse cx="34" cy="92" rx="13" ry="7" fill="#e0739d"/>
+        <ellipse cx="66" cy="92" rx="13" ry="7" fill="#e0739d"/>
+      </svg>
+      <span>pOky</span>
+    </div>
+    <div class="user-info">
+      <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=64" alt="Avatar" class="user-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+      <span class="user-name"><%= user.username %></span>
+    </div>
+    <div class="sidebar-links">
+      <a href="/dashboard">Zurueck zur Uebersicht</a>
+      <a href="/logout">Abmelden</a>
+    </div>
+    <nav class="sidebar-tabs">
+      <button class="tab-btn active" onclick="switchTab('overview', this)">
+        <span class="tab-icon">📊</span>
+        <span class="tab-label">Übersicht</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('leveling', this)">
+        <span class="tab-icon">📈</span>
+        <span class="tab-label">Leveling</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('automod', this)">
+        <span class="tab-icon">🛡️</span>
+        <span class="tab-label">Auto-Mod</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('giveaways', this)">
+        <span class="tab-icon">🎉</span>
+        <span class="tab-label">Giveaways</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('tickets', this)">
+        <span class="tab-icon">🎫</span>
+        <span class="tab-label">Tickets</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('modlogs', this)">
+        <span class="tab-icon">📋</span>
+        <span class="tab-label">Mod-Logs</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('members', this)">
+        <span class="tab-icon">👥</span>
+        <span class="tab-label">Mitglieder</span>
+      </button>
+    </nav>
+  </nav>
+
+  <main class="main-content">
+    <header class="page-header">
+      <div class="guild-header">
+        <div class="guild-icon-large">
+          <% if (guild.icon) { %>
+            <img src="<%= guild.icon %>" alt="<%= guild.name %>">
+          <% } else { %>
+            <div class="guild-icon-placeholder-large"><%= guild.name.charAt(0) %></div>
+          <% } %>
+        </div>
+        <div>
+          <h1><%= guild.name %></h1>
+          <p><%= guild.memberCount ? guild.memberCount + ' Mitglieder' : 'Mitglieder unbekannt' %></p>
+        </div>
+      </div>
+    </header>
+
+
+    <!-- TAB: Übersicht -->
+    <div class="tab-panel active" id="tab-overview">
+      <section class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-icon">🛡️</span>
+          <div><h2><%= stats.modCount %></h2><p>Mod-Aktionen</p></div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">🎫</span>
+          <div><h2><%= stats.ticketCount %></h2><p>Tickets gesamt</p></div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">📂</span>
+          <div><h2><%= stats.openTicketCount %></h2><p>Offene Tickets</p></div>
+        </div>
+      </section>
+
+      <section class="panels">
+        <div class="panel">
+          <h2>⚙️ Einstellungen</h2>
+          <div class="settings-list">
+            <div class="setting-row"><span>Willkommenskanal</span><span><%= settings?.welcome_channel_id ? '<#' + settings.welcome_channel_id + '>' : 'Nicht gesetzt' %></span></div>
+            <div class="setting-row"><span>Ticket-Kategorie</span><span><%= settings?.ticket_category_id ? settings.ticket_category_id : 'Nicht gesetzt' %></span></div>
+            <div class="setting-row"><span>Ticket-Log</span><span><%= settings?.ticket_log_channel_id ? '<#' + settings.ticket_log_channel_id + '>' : 'Nicht gesetzt' %></span></div>
+            <div class="setting-row"><span>Mod-Rolle</span><span><%= settings?.mod_role_id ? settings.mod_role_id : 'Nicht gesetzt' %></span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB: Leveling -->
+    <div class="tab-panel" id="tab-leveling">
+      <div class="panel">
+        <h2>📊 Leveling</h2>
+        <div class="automod-controls">
+          <div class="automod-row">
+            <div class="automod-label">
+              <span class="automod-title">Level-Up Kanal</span>
+              <span class="automod-desc">Kanal für Level-Up Nachrichten</span>
+            </div>
+            <div class="automod-input-group">
+              <input type="text" id="level-channel" placeholder="Channel ID" value="<%= leveling.levelChannelId ?? '' %>" class="input-text" style="min-width:160px">
+              <button class="btn btn-sm btn-save" onclick="saveLevelChannel()">💾</button>
+            </div>
+          </div>
+          <div class="automod-row automod-row-words">
+            <div class="automod-label">
+              <span class="automod-title">Level-Rollen</span>
+              <span class="automod-desc">Automatisch vergebene Rollen bei Level-Aufstieg</span>
+            </div>
+            <div class="automod-words-area">
+              <div class="words-tags" id="level-roles-tags">
+                <% leveling.levelRoles.forEach(lr => { %>
+                  <span class="word-tag" data-level="<%= lr.level %>">
+                    Lvl <%= lr.level %> → <@&<%= lr.role_id %>>
+                    <span class="word-tag-remove" onclick="removeLevelRole(<%= lr.level %>)">&times;</span>
+                  </span>
+                <% }) %>
+              </div>
+              <div class="words-input-row">
+                <input type="number" id="level-role-level" placeholder="Level" min="1" class="input-number" style="width:70px">
+                <input type="text" id="level-role-id" placeholder="Rollen-ID" class="input-text" style="min-width:140px">
+                <button class="btn btn-sm btn-primary" onclick="addLevelRole()">Hinzufügen</button>
+                <button class="btn btn-sm btn-outline" onclick="clearLevelRoles()">Alle löschen</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- TAB: Auto-Mod -->
+    <div class="tab-panel" id="tab-automod">
+      <div class="panel">
+        <h2>🛡️ Auto-Mod</h2>
+        <div class="automod-controls">
+          <div class="automod-row">
+            <div class="automod-label">
+              <span class="automod-title">Auto-Mod aktiviert</span>
+              <span class="automod-desc">Schaltet alle Automod-Filter ein/aus</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="automod-enabled" <%= automod.enabled ? 'checked' : '' %>>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="automod-row">
+            <div class="automod-label">
+              <span class="automod-title">Anti-Spam</span>
+              <span class="automod-desc">Max Nachrichten pro 5 Sekunden (0 = aus)</span>
+            </div>
+            <div class="automod-input-group">
+              <input type="number" id="automod-spam" value="<%= automod.spamThreshold %>" min="0" max="10" class="input-number">
+              <button class="btn btn-sm btn-save" onclick="saveAutomod('spam')">💾</button>
+            </div>
+          </div>
+
+          <div class="automod-row">
+            <div class="automod-label">
+              <span class="automod-title">Link-Filter</span>
+              <span class="automod-desc">Blockt Nachrichten mit Links</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="automod-linkfilter" <%= automod.linkFilter ? 'checked' : '' %>>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="automod-row">
+            <div class="automod-label">
+              <span class="automod-title">Mention-Cap</span>
+              <span class="automod-desc">Max Mentions pro Nachricht (0 = aus)</span>
+            </div>
+            <div class="automod-input-group">
+              <input type="number" id="automod-mentioncap" value="<%= automod.mentionCap %>" min="0" max="50" class="input-number">
+              <button class="btn btn-sm btn-save" onclick="saveAutomod('mentioncap')">💾</button>
+            </div>
+          </div>
+
+          <div class="automod-row automod-row-words">
+            <div class="automod-label">
+              <span class="automod-title">Bad Words</span>
+              <span class="automod-desc">Geblockte Wörter</span>
+            </div>
+            <div class="automod-words-area">
+              <div class="words-tags" id="words-tags">
+                <% automod.words.forEach(word => { %>
+                  <span class="word-tag" data-word="<%= word %>">
+                    <%= word %>
+                    <span class="word-tag-remove" onclick="removeWord('<%= word %>')">&times;</span>
+                  </span>
+                <% }) %>
+              </div>
+              <div class="words-input-row">
+                <input type="text" id="automod-word-input" placeholder="Wort hinzufügen..." class="input-text">
+                <button class="btn btn-sm btn-primary" onclick="addWord()">Hinzufügen</button>
+                <button class="btn btn-sm btn-outline" onclick="clearWords()">Alle löschen</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Giveaways -->
+    <div class="tab-panel" id="tab-giveaways">
+      <div class="panel">
+        <h2>🎉 Giveaways</h2>
+        <% if (giveaways.length === 0) { %>
+          <p class="empty-state">Keine Giveaways vorhanden. Nutze <code>/giveaway start</code> um eins zu erstellen.</p>
+        <% } else { %>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead><tr><th>Preis</th><th>Status</th><th>Gewinner</th><th>Teilnehmer</th><th>Endet</th><th>Erstellt</th></tr></thead>
+              <tbody>
+                <% giveaways.forEach(gw => { %>
+                  <tr>
+                    <td><strong><%= gw.prize %></strong></td>
+                    <td><% if (gw.status === 'active') { %><span class="badge badge-active">Aktiv</span><% } else { %><span class="badge badge-ended">Beendet</span><% } %></td>
+                    <td><%= gw.winner_count %></td>
+                    <td><%= gw.entryCount %></td>
+                    <td><% if (gw.status === 'active') { %><span title="<%= new Date(gw.ends_at * 1000).toLocaleString() %>"><%= new Date(gw.ends_at * 1000).toLocaleString() %></span><% } else { %>-<% } %></td>
+                    <td><%= gw.created_at_formatted %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- TAB: Tickets -->
+    <div class="tab-panel" id="tab-tickets">
+      <div class="panel">
+        <h2>🎫 Tickets (letzte 50)</h2>
+        <% if (tickets.length === 0) { %>
+          <p class="empty-state">Keine Tickets vorhanden.</p>
+        <% } else { %>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead><tr><th>Status</th><th>Ersteller</th><th>Grund</th><th>Geschlossen von</th><th>Erstellt</th></tr></thead>
+              <tbody>
+                <% tickets.forEach(t => { %>
+                  <tr>
+                    <td><span class="badge badge-<%= t.status %>"><%= t.status %></span></td>
+                    <td><%= t.creator_tag ?? t.creator_id %></td>
+                    <td><%= t.reason ?? '-' %></td>
+                    <td><%= t.closed_by_tag ?? t.closed_by ?? '-' %></td>
+                    <td><%= t.created_at_formatted %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- TAB: Mod-Logs -->
+    <div class="tab-panel" id="tab-modlogs">
+      <div class="panel">
+        <h2>📋 Moderations-Logs (letzte 50)</h2>
+        <% if (modLogs.length === 0) { %>
+          <p class="empty-state">Keine Moderations-Logs vorhanden.</p>
+        <% } else { %>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead><tr><th>Aktion</th><th>Ziel</th><th>Moderator</th><th>Grund</th><th>Zeit</th></tr></thead>
+              <tbody>
+                <% modLogs.forEach(log => { %>
+                  <tr>
+                    <td><span class="badge badge-<%= log.action.toLowerCase() %>"><%= log.action %></span></td>
+                    <td><%= log.target_tag ?? log.target_id %></td>
+                    <td><%= log.moderator_tag ?? log.moderator_id %></td>
+                    <td><%= log.reason ?? '-' %></td>
+                    <td><%= log.created_at_formatted %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+    </div>
+    <!-- TAB: Members -->
+    <div class="tab-panel" id="tab-members">
+      <div class="panel members-panel">
+        <div class="members-layout">
+          <!-- Left: Member list -->
+          <div class="members-list-side" id="members-list-side">
+            <div class="members-search-row">
+              <input type="text" id="member-search" placeholder="Mitglieder suchen..." class="input-text members-search-input" oninput="filterMembers()">
+              <button class="btn btn-sm btn-outline" onclick="loadMembers()" title="Neu laden">🔄</button>
+            </div>
+            <div class="members-loading" id="members-loading">
+              <div class="spinner"></div>
+              <p>Lade Mitglieder...</p>
+            </div>
+            <div class="members-grid" id="members-grid"></div>
+            <div class="members-empty" id="members-empty" style="display:none">
+              <p>Keine Mitglieder gefunden.</p>
+            </div>
+          </div>
+
+          <!-- Right: Member detail -->
+          <div class="member-detail-side" id="member-detail-side">
+            <div class="member-detail-placeholder">
+              <span class="placeholder-icon">👤</span>
+              <p>Wähle ein Mitglied aus, um Details anzuzeigen.</p>
+            </div>
+            <div class="member-detail-content" id="member-detail-content" style="display:none">
+              <div class="member-detail-header">
+                <button class="btn btn-sm btn-outline member-detail-back" onclick="closeMemberDetail()">← Zurück</button>
+                <div class="member-detail-actions">
+                  <button class="btn btn-sm btn-primary btn-warn" onclick="openWarnModal()">⚠️ Verwarnen</button>
+                  <button class="btn btn-sm btn-timeout" onclick="openTimeoutModal()">⏱️ Timeout</button>
+                  <button class="btn btn-sm btn-note" onclick="openNoteModal()">📝 Notiz</button>
+                </div>
+              </div>
+              <div class="member-profile">
+                <img id="member-detail-avatar" class="member-detail-avatar" src="" alt="">
+                <div class="member-detail-info">
+                  <h2 id="member-detail-name"></h2>
+                  <span class="member-detail-tag" id="member-detail-tag"></span>
+                  <span class="member-detail-id">ID: <code id="member-detail-id-text"></code></span>
+                </div>
+              </div>
+              <div class="member-detail-stats">
+                <div class="member-stat"><span class="member-stat-label">Verwarnungen</span><span class="member-stat-value" id="member-stat-warns">0</span></div>
+                <div class="member-stat"><span class="member-stat-label">Notizen</span><span class="member-stat-value" id="member-stat-notes">0</span></div>
+                <div class="member-stat"><span class="member-stat-label">Beigetreten</span><span class="member-stat-value" id="member-stat-joined">-</span></div>
+                <div class="member-stat"><span class="member-stat-label">Account erstellt</span><span class="member-stat-value" id="member-stat-created">-</span></div>
+                <div class="member-stat" id="member-stat-timeout-row" style="display:none"><span class="member-stat-label">Timeout bis</span><span class="member-stat-value text-warning" id="member-stat-timeout">-</span></div>
+              </div>
+              <div class="member-detail-roles">
+                <h3>Rollen</h3>
+                <div class="member-roles-tags" id="member-roles-tags"></div>
+              </div>
+              <div class="member-detail-section">
+                <h3>📝 Notizen</h3>
+                <div id="member-notes-list"><p class="empty-state-sm">Keine Notizen.</p></div>
+              </div>
+              <div class="member-detail-section">
+                <h3>Verwarnungen</h3>
+                <div id="member-warns-list"><p class="empty-state-sm">Keine Verwarnungen.</p></div>
+              </div>
+              <div class="member-detail-section">
+                <h3>Mod-Logs (letzte 20)</h3>
+                <div id="member-modlogs-list"><p class="empty-state-sm">Keine Mod-Logs.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Warn Modal -->
+    <div class="modal-overlay" id="warn-modal-overlay" style="display:none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>⚠️ Verwarnung erteilen</h2>
+          <button class="modal-close" onclick="closeWarnModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Verwarne <strong id="warn-modal-user"></strong></p>
+          <label class="modal-label" for="warn-reason">Grund</label>
+          <textarea id="warn-reason" class="input-text modal-textarea" placeholder="Grund für die Verwarnung eingeben..." rows="3"></textarea>
+          <div class="warn-consequence-info" id="warn-consequence-info">
+            <span class="warn-consequence-icon">📋</span>
+            <span id="warn-consequence-text"></span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeWarnModal()">Abbrechen</button>
+          <button class="btn btn-primary btn-danger" id="warn-submit-btn" onclick="submitWarn()">Verwarnen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeout Modal -->
+    <div class="modal-overlay" id="timeout-modal-overlay" style="display:none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>⏱️ Timeout verhängen</h2>
+          <button class="modal-close" onclick="closeTimeoutModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Timeout für <strong id="timeout-modal-user"></strong></p>
+          <label class="modal-label" for="timeout-duration">Dauer</label>
+          <div class="timeout-duration-grid">
+            <button class="timeout-preset" data-minutes="1" onclick="selectTimeoutPreset(1, '1 Minute')">1 Min</button>
+            <button class="timeout-preset" data-minutes="5" onclick="selectTimeoutPreset(5, '5 Minuten')">5 Min</button>
+            <button class="timeout-preset" data-minutes="10" onclick="selectTimeoutPreset(10, '10 Minuten')">10 Min</button>
+            <button class="timeout-preset" data-minutes="60" onclick="selectTimeoutPreset(60, '1 Stunde')">1 Std</button>
+            <button class="timeout-preset" data-minutes="1440" onclick="selectTimeoutPreset(1440, '1 Tag')">1 Tag</button>
+            <button class="timeout-preset" data-minutes="10080" onclick="selectTimeoutPreset(10080, '1 Woche')">1 Wo</button>
+            <button class="timeout-preset" data-minutes="20160" onclick="selectTimeoutPreset(20160, '2 Wochen')">2 Wo</button>
+            <button class="timeout-preset" data-minutes="43200" onclick="selectTimeoutPreset(43200, '1 Monat')">1 Mon</button>
+          </div>
+          <input type="hidden" id="timeout-duration" value="">
+          <div class="selected-timeout" id="selected-timeout" style="display:none">
+            <span>⏱️</span> <span id="selected-timeout-text"></span>
+          </div>
+          <label class="modal-label" for="timeout-reason" style="margin-top:16px">Grund</label>
+          <textarea id="timeout-reason" class="input-text modal-textarea" placeholder="Grund für den Timeout..." rows="3"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeTimeoutModal()">Abbrechen</button>
+          <button class="btn btn-primary btn-timeout-submit" id="timeout-submit-btn" onclick="submitTimeout()">Timeout verhängen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Note Modal -->
+    <div class="modal-overlay" id="note-modal-overlay" style="display:none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>📝 Notiz hinzufügen</h2>
+          <button class="modal-close" onclick="closeNoteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Notiz für <strong id="note-modal-user"></strong></p>
+          <label class="modal-label" for="note-text">Notiz</label>
+          <textarea id="note-text" class="input-text modal-textarea" placeholder="Notiz eingeben..." rows="4"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeNoteModal()">Abbrechen</button>
+          <button class="btn btn-primary btn-note-submit" id="note-submit-btn" onclick="submitNote()">Notiz speichern</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<script src="/js/animated-bg.js"></script>
+  <script>
+    var guildId = '<%= guild.id %>';
+    function switchTab(tabName, btn) {
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+      document.getElementById('tab-' + tabName).classList.add('active');
+      btn.classList.add('active');
+    }
+    var ae = document.getElementById('automod-enabled');
+    if (ae) ae.addEventListener('change', function() {
+      fetch('/api/guild/' + guildId + '/automod/toggle', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: this.checked })
+      });
+    });
+    var al = document.getElementById('automod-linkfilter');
+    if (al) al.addEventListener('change', function() {
+      fetch('/api/guild/' + guildId + '/automod/linkfilter', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: this.checked })
+      });
+    });
+
+    function saveAutomod(type) {
+      var inp = document.getElementById('automod-' + type);
+      var val = parseInt(inp.value, 10);
+      if (isNaN(val)) return;
+      fetch('/api/guild/' + guildId + '/automod/' + type, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(type === 'mentioncap' ? { cap: val } : { threshold: val })
+      }).then(function() {
+        inp.style.borderColor = '#43b581';
+        setTimeout(function() { inp.style.borderColor = ''; }, 1500);
+      });
+    }
+
+    function addWord() {
+      var input = document.getElementById('automod-word-input');
+      var word = input.value.trim();
+      if (!word) return;
+      fetch('/api/guild/' + guildId + '/automod/words/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ word: word })
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.success) {
+          var tag = document.createElement('span');
+          tag.className = 'word-tag';
+          tag.setAttribute('data-word', word);
+          tag.textContent = word;
+          var removeBtn = document.createElement('span');
+          removeBtn.className = 'word-tag-remove';
+          removeBtn.textContent = '\u00d7';
+          removeBtn.addEventListener('click', function() { removeWord(word); });
+          tag.appendChild(removeBtn);
+          document.getElementById('words-tags').appendChild(tag);
+          input.value = '';
+        }
+      });
+    }
+
+    function removeWord(word) {
+      fetch('/api/guild/' + guildId + '/automod/words/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ word: word })
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.success) {
+          var tags = document.querySelectorAll('.word-tag');
+          tags.forEach(function(tag) {
+            if (tag.getAttribute('data-word') === word) tag.remove();
+          });
+        }
+      });
+    }
+
+    function clearWords() {
+      if (!confirm('Wirklich alle Bad Words löschen?')) return;
+      fetch('/api/guild/' + guildId + '/automod/words/clear', { method: 'POST' })
+        .then(function(r) { return r.json(); }).then(function(data) {
+          if (data.success) document.getElementById('words-tags').innerHTML = '';
+        });
+    }
+
+    function saveLevelChannel() {
+      var input = document.getElementById('level-channel');
+      fetch('/api/guild/' + guildId + '/leveling/channel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId: input.value.trim() })
+      }).then(function() {
+        input.style.borderColor = '#43b581';
+        setTimeout(function() { input.style.borderColor = ''; }, 1500);
+      });
+    }
+
+    function addLevelRole() {
+      var levelInput = document.getElementById('level-role-level');
+      var roleInput = document.getElementById('level-role-id');
+      var level = parseInt(levelInput.value, 10);
+      var roleId = roleInput.value.trim();
+      if (!level || !roleId) return;
+      fetch('/api/guild/' + guildId + '/leveling/role/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ level: level, roleId: roleId })
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.success) {
+          var tag = document.createElement('span');
+          tag.className = 'word-tag';
+          tag.setAttribute('data-level', level);
+          tag.innerHTML = 'Lvl ' + level + ' \u2192 <@&' + roleId + '>';
+          var removeBtn = document.createElement('span');
+          removeBtn.className = 'word-tag-remove';
+          removeBtn.textContent = '\u00d7';
+          removeBtn.addEventListener('click', function() { removeLevelRole(level); });
+          tag.appendChild(removeBtn);
+          document.getElementById('level-roles-tags').appendChild(tag);
+          levelInput.value = '';
+          roleInput.value = '';
+        }
+      });
+    }
+
+    function removeLevelRole(level) {
+      fetch('/api/guild/' + guildId + '/leveling/role/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ level: level })
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.success) {
+          var tags = document.querySelectorAll('.word-tag');
+          tags.forEach(function(tag) {
+            if (tag.getAttribute('data-level') === String(level)) tag.remove();
+          });
+        }
+      });
+    }
+
+    function clearLevelRoles() {
+      if (!confirm('Wirklich alle Level-Rollen löschen?')) return;
+      fetch('/api/guild/' + guildId + '/leveling/role/clear', { method: 'POST' })
+        .then(function(r) { return r.json(); }).then(function(data) {
+          if (data.success) document.getElementById('level-roles-tags').innerHTML = '';
+        });
+    }
+
+    // ============================================
+    // Members Tab
+    // ============================================
+    var allMembers = [];
+    var selectedMemberId = null;
+    var noteDataMap = {};
+
+    function loadMembers() {
+      var grid = document.getElementById('members-grid');
+      var loading = document.getElementById('members-loading');
+      var empty = document.getElementById('members-empty');
+
+      grid.innerHTML = '';
+      empty.style.display = 'none';
+      loading.style.display = 'flex';
+
+      fetch('/api/guild/' + guildId + '/members')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          loading.style.display = 'none';
+          if (data.error) {
+            empty.querySelector('p').textContent = 'Fehler: ' + data.error;
+            empty.style.display = 'block';
+            return;
+          }
+          allMembers = data;
+          renderMembers(data);
+        })
+        .catch(function(err) {
+          loading.style.display = 'none';
+          empty.querySelector('p').textContent = 'Fehler beim Laden.';
+          empty.style.display = 'block';
+        });
+    }
+
+    function renderMembers(members) {
+      var grid = document.getElementById('members-grid');
+      var empty = document.getElementById('members-empty');
+      grid.innerHTML = '';
+
+      if (!members || members.length === 0) {
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      members.forEach(function(m) {
+        var card = document.createElement('div');
+        card.className = 'member-card';
+        card.setAttribute('data-userid', m.id);
+        card.setAttribute('data-search', (m.tag + ' ' + m.displayName).toLowerCase());
+        card.onclick = function() { showMemberDetail(m.id); };
+
+        var avatarHtml = m.avatar
+          ? '<img src="' + m.avatar + '?size=80" alt="' + m.tag + '">'
+          : '<div class="member-avatar-placeholder">' + (m.username.charAt(0).toUpperCase()) + '</div>';
+
+        var warnBadge = '';
+        if (m.warnCount > 0) {
+          warnBadge = '<span class="member-warn-badge">' + m.warnCount + '</span>';
+        }
+
+        card.innerHTML = '<div class="member-card-avatar">' + avatarHtml + warnBadge + '</div>'
+          + '<div class="member-card-info">'
+          + '<span class="member-card-name">' + escapeHtml(m.displayName) + '</span>'
+          + '<span class="member-card-tag">' + escapeHtml(m.tag) + '</span>'
+          + '</div>';
+
+        grid.appendChild(card);
+      });
+    }
+
+    function filterMembers() {
+      var query = (document.getElementById('member-search').value || '').toLowerCase();
+      if (!query) {
+        renderMembers(allMembers);
+        return;
+      }
+      var filtered = allMembers.filter(function(m) {
+        return (m.tag + ' ' + m.displayName).toLowerCase().indexOf(query) !== -1;
+      });
+      renderMembers(filtered);
+    }
+
+    function showMemberDetail(userId) {
+      selectedMemberId = userId;
+      var detailSide = document.getElementById('member-detail-side');
+      var placeholder = detailSide.querySelector('.member-detail-placeholder');
+      var content = document.getElementById('member-detail-content');
+
+      placeholder.style.display = 'none';
+      content.style.display = 'block';
+
+      // Show loading state
+      document.getElementById('member-detail-name').textContent = 'Lade...';
+
+      fetch('/api/guild/' + guildId + '/members/' + userId)
+        .then(function(r) { return r.json(); })
+        .then(function(m) {
+          if (m.error) { alert('Fehler: ' + m.error); closeMemberDetail(); return; }
+          renderMemberDetail(m);
+        })
+        .catch(function() {
+          alert('Fehler beim Laden der Mitgliedsdaten.');
+          closeMemberDetail();
+        });
+    }
+
+    function renderMemberDetail(m) {
+      document.getElementById('member-detail-name').textContent = m.displayName;
+      document.getElementById('member-detail-tag').textContent = m.tag;
+      document.getElementById('member-detail-id-text').textContent = m.id;
+      document.getElementById('member-stat-warns').textContent = m.warnCount;
+      document.getElementById('member-stat-notes').textContent = m.notes ? m.notes.length : 0;
+      document.getElementById('member-stat-joined').textContent = m.joinedAt ? new Date(m.joinedAt).toLocaleDateString('de-DE') : '-';
+      document.getElementById('member-stat-created').textContent = new Date(m.createdAt).toLocaleDateString('de-DE');
+
+      var avatarEl = document.getElementById('member-detail-avatar');
+      if (m.avatar) {
+        avatarEl.src = m.avatar + '?size=128';
+        avatarEl.style.display = '';
+      } else {
+        avatarEl.style.display = 'none';
+      }
+
+      // Timeout info
+      var timeoutRow = document.getElementById('member-stat-timeout-row');
+      if (m.communicationDisabledUntil) {
+        timeoutRow.style.display = '';
+        document.getElementById('member-stat-timeout').textContent = new Date(m.communicationDisabledUntil).toLocaleString('de-DE');
+      } else {
+        timeoutRow.style.display = 'none';
+      }
+
+      // Roles
+      var rolesContainer = document.getElementById('member-roles-tags');
+      rolesContainer.innerHTML = '';
+      if (m.roles && m.roles.length > 0) {
+        m.roles.forEach(function(r) {
+          var span = document.createElement('span');
+          span.className = 'member-role-tag';
+          span.style.backgroundColor = hexToRgba(r.color, 0.2);
+          span.style.color = r.color;
+          span.style.borderColor = hexToRgba(r.color, 0.4);
+          span.textContent = r.name;
+          rolesContainer.appendChild(span);
+        });
+      } else {
+        rolesContainer.innerHTML = '<span class="empty-state-sm">Keine Rollen</span>';
+      }
+
+      // Notes list
+      var notesList = document.getElementById('member-notes-list');
+      if (m.notes && m.notes.length > 0) {
+        var htmlNotes = '<div class="mini-table">';
+        m.notes.forEach(function(n) {
+          noteDataMap[n.id] = n.note;
+          var updatedInfo = n.updated_at_formatted ? ' (bearbeitet: ' + n.updated_at_formatted + ')' : '';
+          htmlNotes += '<div class="mini-table-row note-row">'
+            + '<div class="note-content">'
+            + '<span class="note-text">' + escapeHtml(n.note) + '</span>'
+            + '<span class="mini-table-meta">von ' + escapeHtml(n.moderator_tag || n.moderator_id) + ' · ' + n.created_at_formatted + updatedInfo + '</span>'
+            + '</div>'
+            + '<div class="note-actions">'
+            + '<button class="btn btn-sm btn-outline" onclick="editNote(' + n.id + ')" title="Bearbeiten">✏️</button>'
+            + '<button class="btn btn-sm btn-outline btn-delete-note" onclick="deleteNote(' + n.id + ')" title="Löschen">🗑️</button>'
+            + '</div>'
+            + '</div>';
+        });
+        htmlNotes += '</div>';
+        notesList.innerHTML = htmlNotes;
+      } else {
+        notesList.innerHTML = '<p class="empty-state-sm">Keine Notizen.</p>';
+      }
+
+      // Warns list
+      var warnsList = document.getElementById('member-warns-list');
+      if (m.warns && m.warns.length > 0) {
+        var html = '<div class="mini-table">';
+        m.warns.forEach(function(w) {
+          html += '<div class="mini-table-row">'
+            + '<span class="mini-table-reason">' + (w.reason ? escapeHtml(w.reason) : 'Kein Grund') + '</span>'
+            + '<span class="mini-table-meta">von ' + escapeHtml(w.moderator_tag || w.moderator_id) + ' · ' + w.created_at_formatted + '</span>'
+            + '</div>';
+        });
+        html += '</div>';
+        warnsList.innerHTML = html;
+      } else {
+        warnsList.innerHTML = '<p class="empty-state-sm">Keine Verwarnungen.</p>';
+      }
+
+      // Mod logs
+      var modlogsList = document.getElementById('member-modlogs-list');
+      if (m.modLogs && m.modLogs.length > 0) {
+        var html2 = '<div class="mini-table">';
+        m.modLogs.forEach(function(log) {
+          html2 += '<div class="mini-table-row">'
+            + '<span class="badge badge-' + log.action.toLowerCase() + '">' + log.action + '</span>'
+            + '<span class="mini-table-reason">' + (log.reason ? escapeHtml(log.reason) : '-') + '</span>'
+            + '<span class="mini-table-meta">' + log.created_at_formatted + '</span>'
+            + '</div>';
+        });
+        html2 += '</div>';
+        modlogsList.innerHTML = html2;
+      } else {
+        modlogsList.innerHTML = '<p class="empty-state-sm">Keine Mod-Logs.</p>';
+      }
+    }
+
+    function closeMemberDetail() {
+      selectedMemberId = null;
+      var detailSide = document.getElementById('member-detail-side');
+      var placeholder = detailSide.querySelector('.member-detail-placeholder');
+      var content = document.getElementById('member-detail-content');
+      placeholder.style.display = '';
+      content.style.display = 'none';
+    }
+
+    // ============================================
+    // Warn Modal
+    // ============================================
+    function openWarnModal() {
+      if (!selectedMemberId) return;
+      var userName = document.getElementById('member-detail-name').textContent;
+      var warnCount = parseInt(document.getElementById('member-stat-warns').textContent, 10) || 0;
+
+      document.getElementById('warn-modal-user').textContent = userName;
+      document.getElementById('warn-reason').value = '';
+
+      // Show consequence info
+      var nextWarn = warnCount + 1;
+      var cycleIdx = (nextWarn - 1) % 4;
+      var consequenceText = '';
+      if (cycleIdx < 3) {
+        consequenceText = 'Nach dieser Verwarnung bekommt der Nutzer die Rolle <strong>' + (cycleIdx + 1) + '-Warn</strong>.';
+      } else {
+        consequenceText = '🚨 <strong>Achtung:</strong> Dies ist die 4. Verwarnung! Der Nutzer wird für <strong>2 Wochen getimeoutet</strong>.';
+      }
+      document.getElementById('warn-consequence-text').innerHTML = consequenceText;
+
+      document.getElementById('warn-modal-overlay').style.display = 'flex';
+      document.getElementById('warn-submit-btn').disabled = false;
+    }
+
+    function closeWarnModal() {
+      document.getElementById('warn-modal-overlay').style.display = 'none';
+    }
+
+    function submitWarn() {
+      if (!selectedMemberId) return;
+      var reason = (document.getElementById('warn-reason').value || '').trim();
+      var btn = document.getElementById('warn-submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Wird verwarnt...';
+
+      fetch('/api/guild/' + guildId + '/members/' + selectedMemberId + '/warn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reason })
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) {
+            closeWarnModal();
+            // Reload member detail
+            showMemberDetail(selectedMemberId);
+            // Reload member list
+            loadMembers();
+          } else {
+            alert('Fehler: ' + (data.error || 'Unbekannter Fehler'));
+          }
+        })
+        .catch(function() {
+          alert('Fehler beim Verwarnen.');
+        })
+        .finally(function() {
+          btn.disabled = false;
+          btn.textContent = 'Verwarnen';
+        });
+    }
+
+    // ============================================
+    // Timeout Modal
+    // ============================================
+    var selectedTimeoutMinutes = null;
+
+    function selectTimeoutPreset(minutes, label) {
+      selectedTimeoutMinutes = minutes;
+      document.getElementById('timeout-duration').value = minutes;
+      document.getElementById('selected-timeout').style.display = 'flex';
+      document.getElementById('selected-timeout-text').textContent = label;
+      // Highlight active preset
+      document.querySelectorAll('.timeout-preset').forEach(function(b) {
+        b.classList.remove('active');
+        if (b.getAttribute('data-minutes') == String(minutes)) b.classList.add('active');
+      });
+    }
+
+    function openTimeoutModal() {
+      if (!selectedMemberId) return;
+      var userName = document.getElementById('member-detail-name').textContent;
+      document.getElementById('timeout-modal-user').textContent = userName;
+      document.getElementById('timeout-reason').value = '';
+      selectedTimeoutMinutes = null;
+      document.getElementById('timeout-duration').value = '';
+      document.getElementById('selected-timeout').style.display = 'none';
+      document.querySelectorAll('.timeout-preset').forEach(function(b) { b.classList.remove('active'); });
+      document.getElementById('timeout-modal-overlay').style.display = 'flex';
+      document.getElementById('timeout-submit-btn').disabled = false;
+    }
+
+    function closeTimeoutModal() {
+      document.getElementById('timeout-modal-overlay').style.display = 'none';
+    }
+
+    function submitTimeout() {
+      if (!selectedMemberId) return;
+      var durationMin = parseInt(document.getElementById('timeout-duration').value, 10);
+      if (!durationMin || durationMin <= 0) {
+        alert('Bitte wähle eine Dauer aus.');
+        return;
+      }
+      var reason = (document.getElementById('timeout-reason').value || '').trim();
+      var btn = document.getElementById('timeout-submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Wird getimeoutet...';
+
+      fetch('/api/guild/' + guildId + '/members/' + selectedMemberId + '/timeout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ duration: durationMin * 60 * 1000, reason: reason })
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) {
+            closeTimeoutModal();
+            showMemberDetail(selectedMemberId);
+            loadMembers();
+          } else {
+            alert('Fehler: ' + (data.error || 'Unbekannter Fehler'));
+          }
+        })
+        .catch(function() {
+          alert('Fehler beim Timeout.');
+        })
+        .finally(function() {
+          btn.disabled = false;
+          btn.textContent = 'Timeout verhängen';
+        });
+    }
+
+    // ============================================
+    // Note Modal
+    // ============================================
+    var editingNoteId = null;
+
+    function openNoteModal(noteId) {
+      if (!selectedMemberId) return;
+      var userName = document.getElementById('member-detail-name').textContent;
+      document.getElementById('note-modal-user').textContent = userName;
+      editingNoteId = noteId || null;
+
+      if (editingNoteId && noteDataMap[editingNoteId]) {
+        document.getElementById('note-text').value = noteDataMap[editingNoteId];
+        document.querySelector('#note-modal-overlay .modal-header h2').textContent = '📝 Notiz bearbeiten';
+        document.getElementById('note-submit-btn').textContent = 'Notiz aktualisieren';
+      } else {
+        document.getElementById('note-text').value = '';
+        document.querySelector('#note-modal-overlay .modal-header h2').textContent = '📝 Notiz hinzufügen';
+        document.getElementById('note-submit-btn').textContent = 'Notiz speichern';
+      }
+
+      document.getElementById('note-modal-overlay').style.display = 'flex';
+      document.getElementById('note-submit-btn').disabled = false;
+    }
+
+    function editNote(noteId) {
+      openNoteModal(noteId);
+    }
+
+    function closeNoteModal() {
+      document.getElementById('note-modal-overlay').style.display = 'none';
+      editingNoteId = null;
+    }
+
+    function submitNote() {
+      if (!selectedMemberId) return;
+      var noteText = (document.getElementById('note-text').value || '').trim();
+      if (!noteText) {
+        alert('Bitte gib einen Notiztext ein.');
+        return;
+      }
+      var btn = document.getElementById('note-submit-btn');
+      btn.disabled = true;
+
+      var url, method;
+      if (editingNoteId) {
+        url = '/api/guild/' + guildId + '/members/' + selectedMemberId + '/notes/' + editingNoteId;
+        method = 'POST';
+      } else {
+        url = '/api/guild/' + guildId + '/members/' + selectedMemberId + '/notes';
+        method = 'POST';
+      }
+
+      fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: noteText })
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) {
+            closeNoteModal();
+            showMemberDetail(selectedMemberId);
+          } else {
+            alert('Fehler: ' + (data.error || 'Unbekannter Fehler'));
+          }
+        })
+        .catch(function() {
+          alert('Fehler beim Speichern der Notiz.');
+        })
+        .finally(function() {
+          btn.disabled = false;
+        });
+    }
+
+    function deleteNote(noteId) {
+      if (!selectedMemberId) return;
+      if (!confirm('Diese Notiz wirklich löschen?')) return;
+
+      fetch('/api/guild/' + guildId + '/members/' + selectedMemberId + '/notes/' + noteId, {
+        method: 'DELETE'
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) {
+            showMemberDetail(selectedMemberId);
+          } else {
+            alert('Fehler: ' + (data.error || 'Unbekannter Fehler'));
+          }
+        })
+        .catch(function() {
+          alert('Fehler beim Löschen der Notiz.');
+        });
+    }
+
+    // Close modals on overlay click
+    document.getElementById('warn-modal-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeWarnModal();
+    });
+    document.getElementById('timeout-modal-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeTimeoutModal();
+    });
+    document.getElementById('note-modal-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeNoteModal();
+    });
+
+    // Load members when tab is first opened
+    var originalSwitchTab = switchTab;
+    switchTab = function(tabName, btn) {
+      originalSwitchTab(tabName, btn);
+      if (tabName === 'members' && allMembers.length === 0) {
+        loadMembers();
+      }
+    };
+
+    // Utility functions
+    function escapeHtml(str) {
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function hexToRgba(hex, alpha) {
+      hex = hex.replace('#', '');
+      if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+      var r = parseInt(hex.substring(0,2), 16);
+      var g = parseInt(hex.substring(2,4), 16);
+      var b = parseInt(hex.substring(4,6), 16);
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+    }
+  </script>
+</body>
+</html>

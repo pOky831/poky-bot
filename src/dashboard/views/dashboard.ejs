@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | pOky</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+  <canvas id="animated-bg"></canvas>
+  <div class="floating-shapes">
+    <div class="float-circle"></div>
+    <div class="float-circle"></div>
+    <div class="float-circle"></div>
+    <div class="float-circle"></div>
+    <div class="float-circle"></div>
+    <div class="float-circle"></div>
+    <div class="particle-dot"></div>
+    <div class="particle-dot"></div>
+    <div class="particle-dot"></div>
+    <div class="particle-dot"></div>
+    <div class="particle-dot"></div>
+  </div>
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <svg class="logo-icon" width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="50" cy="54" rx="44" ry="42" fill="#f799b9"/>
+        <ellipse cx="34" cy="46" rx="6" ry="12" fill="#2d1f2c"/>
+        <ellipse cx="32" cy="42" rx="2.5" ry="5" fill="white"/>
+        <ellipse cx="66" cy="46" rx="6" ry="12" fill="#2d1f2c"/>
+        <ellipse cx="64" cy="42" rx="2.5" ry="5" fill="white"/>
+        <path d="M42 61 Q50 67 58 61" stroke="#2d1f2c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <ellipse cx="26" cy="57" rx="7" ry="5" fill="#e0739d" opacity="0.6"/>
+        <ellipse cx="74" cy="57" rx="7" ry="5" fill="#e0739d" opacity="0.6"/>
+        <ellipse cx="34" cy="92" rx="13" ry="7" fill="#e0739d"/>
+        <ellipse cx="66" cy="92" rx="13" ry="7" fill="#e0739d"/>
+      </svg>
+      <span>pOky</span>
+    </div>
+    <div class="user-info">
+      <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=64" 
+           alt="Avatar" class="user-avatar" 
+           onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+      <span class="user-name"><%= user.username %></span>
+    </div>
+    <div class="sidebar-links">
+      <a href="/dashboard" class="active">Server Übersicht</a>
+      <a href="/logout">Abmelden</a>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <header class="page-header">
+      <h1>Wähle einen Server</h1>
+      <p>Server, auf denen du Admin-Rechte hast</p>
+    </header>
+
+    <div class="guild-grid">
+      <% guilds.forEach(guild => { %>
+        <a href="/dashboard/guild/<%= guild.id %>" class="guild-card">
+          <div class="guild-icon">
+            <% if (guild.icon) { %>
+              <img src="<%= guild.icon %>" alt="<%= guild.name %>">
+            <% } else { %>
+              <div class="guild-icon-placeholder"><%= guild.name.charAt(0) %></div>
+            <% } %>
+          </div>
+          <div class="guild-info">
+            <h3><%= guild.name %></h3>
+            <p><%= guild.memberCount ? guild.memberCount + ' Mitglieder' : 'Mitglieder unbekannt' %></p>
+          </div>
+          <span class="guild-arrow">→</span>
+        </a>
+      <% }) %>
+    </div>
+  </main>
+  <script src="/js/animated-bg.js"></script>
+</body>
+</html>
