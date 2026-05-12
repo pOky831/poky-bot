@@ -625,6 +625,64 @@ app.post("/api/guild/:id/members/:userId/warn", ensureAuth, async (req, res) => 
   }
 });
 
+// API: Ticket messages (history)
+app.get("/api/guild/:id/tickets/:channelId/messages", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const guild = user.guilds.find((g) => g.id === guildId);
+  if (!guild) return res.status(403).json({ error: "No access" });
+
+  const channelId = Array.isArray(req.params.channelId) ? req.params.channelId[0] : req.params.channelId;
+  if (!botClient) return res.status(500).json({ error: "Bot nicht verbunden." });
+
+  try {
+    // Verify the channel is actually a registered ticket in this guild
+    const ticket = stmts.getTicketByChannel(channelId);
+    if (!ticket || ticket.guild_id !== guildId) {
+      return res.status(404).json({ error: "Ticket nicht gefunden." });
+    }
+
+    const discordGuild = botClient.guilds.cache.get(guildId);
+    if (!discordGuild) return res.status(404).json({ error: "Server nicht gefunden." });
+
+    const channel = discordGuild.channels.cache.get(channelId);
+    if (!channel || !channel.isTextBased()) {
+      return res.status(404).json({ error: "Ticket-Kanal nicht gefunden." });
+    }
+
+    const messages = await channel.messages.fetch({ limit: 100 });
+    const formatted = messages
+      .reverse()
+      .map((msg) => ({
+        id: msg.id,
+        author: msg.author.tag,
+        authorId: msg.author.id,
+        avatar: msg.author.avatar
+          ? `https://cdn.discordapp.com/avatars/${msg.author.id}/${msg.author.avatar}.png?size=80`
+          : null,
+        isBot: msg.author.bot,
+        content: msg.content,
+        createdAt: msg.createdAt.toISOString(),
+        createdAtFormatted: msg.createdAt.toLocaleString("de-DE"),
+        attachments: msg.attachments.map((att) => ({
+          name: att.name,
+          url: att.url,
+          size: att.size,
+        })),
+        embeds: msg.embeds.map((emb) => ({
+          title: emb.title,
+          description: emb.description,
+          url: emb.url,
+        })),
+      }));
+
+    res.json({ success: true, messages: formatted, channelName: channel.name });
+  } catch (err) {
+    console.error("Fehler beim Abrufen der Ticket-Nachrichten:", err);
+    res.status(500).json({ error: "Nachrichten konnten nicht geladen werden." });
+  }
+});
+
 // Global error handler
 app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error("Dashboard error:", err);
