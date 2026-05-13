@@ -15,6 +15,7 @@
     <div class="theme-dot theme-dot-orange" data-theme="orange" title="Orange Theme"></div>
   </div>
   <div class="hero">
+    <!-- v2-invite-btn -->
     <canvas id="animated-bg"></canvas>
     <div class="floating-shapes">
       <div class="float-circle"></div>
@@ -50,6 +51,7 @@
           <a href="/dashboard" class="btn btn-secondary">Dashboard</a>
           <a href="/logout" class="btn btn-outline">Abmelden</a>
         <% } else { %>
+          <a href="https://discord.com/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-accent">➕ Bot einladen</a>
           <a href="/login" class="btn btn-primary">🔐 Mit Discord anmelden</a>
         <% } %>
       </div>
@@ -76,7 +78,10 @@
         </div>
       </div>
       <% if (!user) { %>
-        <a href="/login" class="btn btn-large btn-primary">Jetzt anmelden</a>
+        <div class="hero-cta">
+          <a href="/login" class="btn btn-large btn-primary">🚀 Jetzt anmelden</a>
+          <a href="https://discord.com/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-large btn-accent">➕ Bot einladen</a>
+        </div>
       <% } %>
     </div>
   </div>

@@ -16,9 +16,9 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : (process.env.DA
 const CALLBACK_URL = process.env.DASHBOARD_CALLBACK_URL ?? `http://localhost:${PORT}/auth/discord/callback`;
 
 // EJS setup
+app.disable("view cache"); // Force re-read templates from disk every request
 app.set("view engine", "ejs");
 app.set("views", resolve(process.cwd(), "src/dashboard/views"));
-app.disable("view cache"); // Force re-read templates from disk every request
 app.use(express.static(resolve(process.cwd(), "src/dashboard/public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
