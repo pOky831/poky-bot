@@ -309,7 +309,7 @@
           </div>
           <div class="automod-row">
             <div class="automod-label"></div>
-            <button class="btn btn-primary" onclick="sendTicketPanel()" style="padding:10px 24px;font-size:14px">🚀 Panel senden</button>
+            <button id="ticket-send-btn" class="btn btn-primary" onclick="sendTicketPanel()" style="padding:10px 24px;font-size:14px">🚀 Panel senden</button>
           </div>
         </div>
       </div>
@@ -1292,6 +1292,146 @@
       var b = parseInt(hex.substring(4,6), 16);
       return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
     }
+
+    // ═══════════════════════════════════
+    // Ticket Panel Functions
+    // ═══════════════════════════════════
+
+    function updateTicketOptionInputs() {
+      var count = parseInt(document.getElementById('ticket-option-count').value, 10) || 1;
+      if (count < 1) count = 1;
+      if (count > 5) count = 5;
+      document.getElementById('ticket-option-count').value = count;
+      var container = document.getElementById('ticket-options-container');
+      var currentInputs = container.querySelectorAll('.ticket-option-input');
+      var currentValues = [];
+      currentInputs.forEach(function(inp) { currentValues.push(inp.value); });
+      container.innerHTML = '';
+      for (var i = 0; i < count; i++) {
+        var val = currentValues[i] || ('Option ' + (i + 1));
+        var row = document.createElement('div');
+        row.className = 'ticket-option-row';
+        var inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'input-text ticket-option-input';
+        inp.placeholder = 'Option ' + (i + 1);
+        inp.value = val;
+        inp.style.minWidth = '200px';
+        row.appendChild(inp);
+        container.appendChild(row);
+      }
+    }
+
+    function loadTicketChannels() {
+      fetch('/api/guild/' + guildId + '/tickets/channels')
+        .then(function(r) { return r.json(); })
+        .then(function(channels) {
+          var sel = document.getElementById('ticket-channel-select');
+          var html = '<option value="">-- Kanal wählen --</option>';
+          channels.forEach(function(ch) {
+            html += '<option value="' + ch.id + '">#' + escapeHtml(ch.name) + '</option>';
+          });
+          sel.innerHTML = html;
+          <% if (ticketPanel && ticketPanel.channel_id) { %>
+            var savedChannel = '<%= ticketPanel.channel_id %>';
+            if (savedChannel) sel.value = savedChannel;
+          <% } %>
+        })
+        .catch(function() {
+          document.getElementById('ticket-channel-select').innerHTML = '<option value="">Fehler beim Laden</option>';
+        });
+    }
+
+    function loadSupportRolesList() {
+      fetch('/api/guild/' + guildId + '/tickets/roles')
+        .then(function(r) { return r.json(); })
+        .then(function(roles) {
+          var sel = document.getElementById('support-role-select');
+          var html = '<option value="">-- Rolle wählen --</option>';
+          roles.forEach(function(role) {
+            html += '<option value="' + role.id + '">@' + escapeHtml(role.name) + '</option>';
+          });
+          sel.innerHTML = html;
+        })
+        .catch(function() {
+          document.getElementById('support-role-select').innerHTML = '<option value="">Fehler beim Laden</option>';
+        });
+    }
+
+    function sendTicketPanel() {
+      var channelId = document.getElementById('ticket-channel-select').value;
+      if (!channelId) {
+        alert('Bitte wähle einen Kanal aus.');
+        return;
+      }
+      var optionInputs = document.querySelectorAll('#ticket-options-container .ticket-option-input');
+      var options = [];
+      optionInputs.forEach(function(inp) {
+        var label = inp.value.trim();
+        if (label) options.push({ label: label, emoji: '🎫' });
+      });
+      if (options.length === 0) {
+        alert('Bitte mindestens eine Option angeben.');
+        return;
+      }
+      var btn = document.getElementById('ticket-send-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Sende...'; }
+      fetch('/api/guild/' + guildId + '/tickets/panel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId: channelId, options: options })
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) {
+            alert('✅ Panel wurde gesendet!');
+          } else {
+            alert('❌ Fehler: ' + (data.error || 'Unbekannt'));
+          }
+        })
+        .catch(function(err) {
+          alert('❌ Fehler: ' + err.message);
+        })
+        .finally(function() {
+          if (btn) { btn.disabled = false; btn.textContent = '🚀 Panel senden'; }
+        });
+    }
+
+    function addSupportRole() {
+      var roleId = document.getElementById('support-role-select').value;
+      if (!roleId) {
+        alert('Bitte wähle eine Rolle aus.');
+        return;
+      }
+      fetch('/api/guild/' + guildId + '/tickets/support-role/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roleId: roleId })
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) location.reload();
+          else alert('❌ Fehler: ' + (data.error || 'Unbekannt'));
+        });
+    }
+
+    function removeSupportRole(roleId) {
+      if (!confirm('Supporter-Rolle entfernen?')) return;
+      fetch('/api/guild/' + guildId + '/tickets/support-role/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roleId: roleId })
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) location.reload();
+          else alert('❌ Fehler: ' + (data.error || 'Unbekannt'));
+        });
+    }
+
+    // Load ticket panel data immediately (DOM is ready at end of body)
+    loadTicketChannels();
+    loadSupportRolesList();
   </script>
 </body>
 </html>
