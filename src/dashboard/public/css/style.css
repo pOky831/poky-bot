@@ -94,10 +94,6 @@
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .data-table tr:hover td {
-  background: var(--bg-hover);
-}
-
 [data-theme="dark"] .error-body {
   background: linear-gradient(160deg, #0d1117 0%, #161b22 40%, #1a1a2e 100%);
 }
@@ -266,10 +262,6 @@
 [data-theme="dark"] .input-number {
   background: var(--bg-hover);
   color: var(--text-primary);
-}
-
-[data-theme="dark"] .data-table tr:hover td {
-  background: var(--bg-hover);
 }
 
 [data-theme="dark"] .error-body {
@@ -587,6 +579,17 @@ body {
   box-shadow: 0 8px 25px rgba(247, 153, 185, 0.55);
 }
 
+.btn-accent {
+  background: linear-gradient(135deg, #5865F2, #4752C4);
+  color: white;
+  box-shadow: 0 4px 14px rgba(88, 101, 242, 0.35);
+}
+
+.btn-accent:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(88, 101, 242, 0.5);
+}
+
 .btn-secondary {
   background: var(--bg-hover);
   color: var(--text-primary);
@@ -700,6 +703,13 @@ body {
   margin-left: auto;
   margin-right: auto;
   line-height: 1.7;
+}
+
+.hero-cta {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 /* ============================================
@@ -1080,15 +1090,19 @@ body {
 /* ============================================
    Guild Detail Page
    ============================================ */
+.page-header {
+  margin-bottom: 36px;
+}
+
 .guild-header {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
 }
 
 .guild-icon-large {
-  width: 72px;
-  height: 72px;
+  width: 80px;
+  height: 80px;
   flex-shrink: 0;
 }
 
@@ -1142,12 +1156,31 @@ body {
   padding: 28px 26px;
   transition: all var(--transition);
   box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.stat-card:hover::before {
+  opacity: 1;
 }
 
 .stat-card:hover {
   border-color: var(--accent);
   transform: translateY(-3px);
   box-shadow: var(--shadow);
+  background: rgba(255,255,255,0.95);
 }
 
 .stat-icon {
@@ -1182,8 +1215,13 @@ body {
   backdrop-filter: blur(8px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 28px;
+  padding: 32px 30px;
   box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition);
+}
+
+.panel:hover {
+  border-color: rgba(247, 153, 185, 0.35);
 }
 
 .panel-full {
@@ -1191,13 +1229,16 @@ body {
 }
 
 .panel h2 {
-  font-size: 18px;
+  font-size: 17px;
   margin-bottom: 24px;
   display: flex;
   align-items: center;
   gap: 10px;
   font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.01em;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
 }
 
 .settings-list {
@@ -1266,17 +1307,27 @@ body {
   background: var(--bg-hover);
 }
 
+.data-table tr:nth-child(even) td {
+  background: var(--table-stripe, rgba(247, 153, 185, 0.03));
+}
+
+.data-table tr:nth-child(even):hover td {
+  background: var(--bg-hover);
+}
+
 /* ============================================
    Badges
    ============================================ */
 .badge {
   display: inline-flex;
-  padding: 4px 12px;
+  align-items: center;
+  padding: 3px 10px;
   border-radius: 50px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  line-height: 1.4;
 }
 
 .badge-kick { background: rgba(250, 168, 26, 0.15); color: #b87a14; }
@@ -1432,6 +1483,7 @@ body {
   }
 }
 
+
 /* ============================================
    Auto-Mod Dashboard Controls
    ============================================ */
@@ -1449,7 +1501,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 0;
+  padding: 18px 0;
   border-bottom: 1px solid var(--border);
   gap: 16px;
   flex-wrap: wrap;
