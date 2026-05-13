@@ -54,7 +54,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const subcommand = interaction.options.getSubcommand();
 
   if (subcommand === "create") {
-    const settings = stmts.getGuildSettings(interaction.guild.id);
+    const settings = await stmts.getGuildSettings(interaction.guild.id);
     if (!settings?.ticket_category_id) {
       await interaction.reply({ content: "Ticket-System ist nicht eingerichtet. Ein Admin muss `/ticket setup` ausführen.", ephemeral: true });
       return;
@@ -63,7 +63,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     await interaction.deferReply({ ephemeral: true });
 
     // Check if user already has an open ticket
-    const openTickets = stmts.getOpenTickets(interaction.guild.id);
+    const openTickets = await stmts.getOpenTickets(interaction.guild.id);
     const existing = openTickets.find((t) => t.creator_id === interaction.user.id);
     if (existing) {
       await interaction.editReply(`Du hast bereits ein offenes Ticket: <#${existing.channel_id}>`);
@@ -100,7 +100,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       ],
     });
 
-    stmts.insertTicket(interaction.guild.id, ticketChannel.id, interaction.user.id, interaction.user.tag, reason);
+    await stmts.insertTicket(interaction.guild.id, ticketChannel.id, interaction.user.id, interaction.user.tag, reason);
 
     await ticketChannel.send({
       content: `Hallo <@${interaction.user.id}>!\nEin Team-Mitglied wird sich gleich um dich kümmern.\n**Grund:** ${reason}`,
@@ -127,7 +127,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
-    const ticket = stmts.getTicketByChannel(channel.id);
+    const ticket = await stmts.getTicketByChannel(channel.id);
     if (!ticket) {
       await interaction.reply({ content: "Dies ist kein Ticket-Kanal.", ephemeral: true });
       return;
@@ -139,11 +139,11 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     const closeReason = interaction.options.getString("grund") ?? "Kein Grund angegeben";
-    stmts.closeTicket(interaction.user.id, interaction.user.tag, closeReason, channel.id);
+    await stmts.closeTicket(interaction.user.id, interaction.user.tag, closeReason, channel.id);
 
     await interaction.reply({ content: `Ticket wird geschlossen... Grund: ${closeReason}` });
 
-    const settings = stmts.getGuildSettings(interaction.guild.id);
+    const settings = await stmts.getGuildSettings(interaction.guild.id);
     if (settings?.ticket_log_channel_id) {
       const logChannel = interaction.guild.channels.cache.get(settings.ticket_log_channel_id) as TextChannel | undefined;
       if (logChannel?.send) {
@@ -177,9 +177,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   if (subcommand === "setup") {
     const category = interaction.options.getChannel("kategorie", true);
     const logChannel = interaction.options.getChannel("log_kanal", true);
-    const existing = stmts.getGuildSettings(interaction.guild.id);
+    const existing = await stmts.getGuildSettings(interaction.guild.id);
 
-    stmts.setGuildSettings(
+    await stmts.setGuildSettings(
       interaction.guild.id,
       existing?.welcome_channel_id ?? null,
       category.id,

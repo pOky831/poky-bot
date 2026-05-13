@@ -64,7 +64,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   if (subcommand === "rank") {
     const user = interaction.options.getUser("nutzer") ?? interaction.user;
-    const xpData = stmts.getUserXp(interaction.guild.id, user.id);
+    const xpData = await stmts.getUserXp(interaction.guild.id, user.id);
 
     if (!xpData) {
       await interaction.editReply(`**${user.username}** hat noch keine XP gesammelt.`);
@@ -94,7 +94,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   }
 
   if (subcommand === "leaderboard") {
-    const board = stmts.getLeaderboard(interaction.guild.id, 10);
+    const board = await stmts.getLeaderboard(interaction.guild.id, 10);
 
     if (board.length === 0) {
       await interaction.editReply("Noch keine XP-Daten auf diesem Server.");
@@ -125,7 +125,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const aktion = interaction.options.getString("aktion", true);
 
     if (aktion === "list") {
-      const roles = stmts.getLevelRoles(interaction.guild.id);
+      const roles = await stmts.getLevelRoles(interaction.guild.id);
       if (roles.length === 0) {
         await interaction.editReply("Keine Level-Rollen konfiguriert.");
         return;
@@ -136,7 +136,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     if (aktion === "clear") {
-      stmts.clearLevelRoles(interaction.guild.id);
+      await stmts.clearLevelRoles(interaction.guild.id);
       await interaction.editReply("Alle Level-Rollen gelöscht.");
       return;
     }
@@ -153,13 +153,13 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         await interaction.editReply("Bitte gib eine Rolle an.");
         return;
       }
-      stmts.addLevelRole(interaction.guild.id, level, role.id);
+      await stmts.addLevelRole(interaction.guild.id, level, role.id);
       await interaction.editReply(`✅ Level **${level}** → <@&${role.id}>`);
       return;
     }
 
     if (aktion === "remove") {
-      stmts.removeLevelRole(interaction.guild.id, level);
+      await stmts.removeLevelRole(interaction.guild.id, level);
       await interaction.editReply(`🗑️ Level-Rolle für Level ${level} entfernt.`);
       return;
     }

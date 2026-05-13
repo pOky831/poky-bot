@@ -271,8 +271,85 @@
 
     <!-- TAB: Tickets -->
     <div class="tab-panel" id="tab-tickets">
+      <!-- Ticket Panel Configuration -->
       <div class="panel">
-        <h2>🎫 Tickets (letzte 50)</h2>
+        <h2>⚙️ Ticket-Panel</h2>
+        <div class="automod-controls">
+          <div class="automod-row">
+            <div class="automod-label">
+              <span class="automod-title">Kanal</span>
+              <span class="automod-desc">Kanal für das Ticket-Panel</span>
+            </div>
+            <div class="automod-input-group">
+              <select id="ticket-channel-select" class="input-text" style="min-width:200px">
+                <option value="">Lade Kanäle...</option>
+              </select>
+            </div>
+          </div>
+          <div class="automod-row">
+            <div class="automod-label">
+              <span class="automod-title">Anzahl der Optionen</span>
+              <span class="automod-desc">Wie viele Ticket-Arten soll es geben?</span>
+            </div>
+            <div class="automod-input-group">
+              <input type="number" id="ticket-option-count" value="2" min="1" max="5" class="input-number" style="width:60px" onchange="updateTicketOptionInputs()">
+            </div>
+          </div>
+          <div class="automod-row automod-row-words">
+            <div class="automod-label">
+              <span class="automod-title">Optionen</span>
+              <span class="automod-desc">Name für jede Ticket-Option</span>
+            </div>
+            <div class="automod-words-area">
+              <div id="ticket-options-container" class="words-input-row" style="flex-direction:column;gap:8px">
+                <div class="ticket-option-row"><input type="text" class="input-text ticket-option-input" placeholder="Option 1" value="Bewerbung" style="min-width:200px"></div>
+                <div class="ticket-option-row"><input type="text" class="input-text ticket-option-input" placeholder="Option 2" value="High Team" style="min-width:200px"></div>
+              </div>
+            </div>
+          </div>
+          <div class="automod-row">
+            <div class="automod-label"></div>
+            <button class="btn btn-primary" onclick="sendTicketPanel()" style="padding:10px 24px;font-size:14px">🚀 Panel senden</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Support Roles -->
+      <div class="panel" style="margin-top:16px">
+        <h2>🛡️ Supporter-Rollen</h2>
+        <div class="automod-controls">
+          <div class="automod-row automod-row-words">
+            <div class="automod-label">
+              <span class="automod-title">Rollen</span>
+              <span class="automod-desc">Diese Rollen können Tickets sehen</span>
+            </div>
+            <div class="automod-words-area">
+              <div class="words-tags" id="support-roles-tags">
+                <% if (ticketSupportRoles && ticketSupportRoles.length) { %>
+                  <% ticketSupportRoles.forEach(r => { %>
+                    <span class="word-tag" data-role="<%= r.role_id %>">
+                      <@&<%= r.role_id %>>
+                      <span class="word-tag-remove" onclick="removeSupportRole('<%= r.role_id %>')">&times;</span>
+                    </span>
+                  <% }) %>
+                <% } else { %>
+                  <span class="empty-state-sm">Keine Supporter-Rollen gesetzt.</span>
+                <% } %>
+              </div>
+              <div class="words-input-row">
+                <select id="support-role-select" class="input-text" style="min-width:200px">
+                  <option value="">Lade Rollen...</option>
+                </select>
+                <button class="btn btn-sm btn-primary" onclick="addSupportRole()">Hinzufügen</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ticket History -->
+      <div class="panel" style="margin-top:16px">
+        <h2>📋 Ticket-Verlauf (letzte 50)</h2>
         <% if (tickets.length === 0) { %>
           <p class="empty-state">Keine Tickets vorhanden.</p>
         <% } else { %>

@@ -4,7 +4,7 @@ import passport from "passport";
 import { Strategy as DiscordStrategy } from "passport-discord";
 import { resolve } from "node:path";
 import { Client } from "discord.js";
-import { db, stmts } from "../database/db.js";
+import { client, stmts } from "../database/db.js";
 import type { GuildSettings, ModLog, Ticket, GuildCacheEntry, Giveaway, MemberNote } from "../database/db.js";
 import { timestampToDate } from "../utils/helpers.js";
 
@@ -104,15 +104,17 @@ app.get("/dashboard", ensureAuth, async (req, res) => {
     return (perms & BigInt(0x8)) === BigInt(0x8) || g.owner;
   });
 
-  const guilds = adminGuilds.map((g) => {
-    const cached = stmts.getGuildCache(g.id);
-    return {
-      id: g.id,
-      name: g.name,
-      icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null,
-      memberCount: cached?.member_count ?? null,
-    };
-  });
+  const guilds = await Promise.all(
+    adminGuilds.map(async (g) => {
+      const cached = await stmts.getGuildCache(g.id);
+      return {
+        id: g.id,
+        name: g.name,
+        icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null,
+        memberCount: cached?.member_count ?? null,
+      };
+    })
+  );
 
   res.render("dashboard", { user, guilds });
 });
@@ -128,23 +130,29 @@ app.get("/dashboard/guild/:id", ensureAuth, async (req, res) => {
   const isAdmin = (perms & BigInt(0x8)) === BigInt(0x8) || guild.owner;
   if (!isAdmin) return res.status(403).render("error", { message: "Admin-Rechte erforderlich." });
 
-  const settings = stmts.getGuildSettings(guildId);
-  const modLogs = stmts.getModLogs(guildId);
-  const tickets = stmts.getTickets(guildId);
-  const modCount = stmts.getStats(guildId)?.count ?? 0;
-  const ticketCount = stmts.getTicketCount(guildId)?.count ?? 0;
-  const openTicketCount = stmts.getOpenTicketCount(guildId)?.count ?? 0;
-  const automodConfig = stmts.getAutomodConfig(guildId) as Record<string, number> | undefined;
-  const automodWords = stmts.getAutomodWords(guildId);
-  const levelRoles = stmts.getLevelRoles(guildId);
-  const levelChannelId = stmts.getLevelChannel(guildId);
-  const giveaways = stmts.getGiveawaysByGuild(guildId).map((gw) => ({
-    ...gw,
-    entryCount: stmts.getGiveawayEntryCount(gw.id),
-    created_at_formatted: timestampToDate(gw.created_at),
-  }));
+  const settings = await stmts.getGuildSettings(guildId);
+  const modLogs = await stmts.getModLogs(guildId);
+  const tickets = await stmts.getTickets(guildId);
+  const modCount = (await stmts.getStats(guildId))?.count ?? 0;
+  const ticketCount = (await stmts.getTicketCount(guildId))?.count ?? 0;
+  const openTicketCount = (await stmts.getOpenTicketCount(guildId))?.count ?? 0;
+  const ticketPanel = await stmts.getTicketPanel(guildId);
+  const ticketPanelOptions = await stmts.getTicketPanelOptions(guildId);
+  const ticketSupportRoles = await stmts.getTicketSupportRoles(guildId);
+  const automodConfig = await stmts.getAutomodConfig(guildId) as Record<string, number> | undefined;
+  const automodWords = await stmts.getAutomodWords(guildId);
+  const levelRoles = await stmts.getLevelRoles(guildId);
+  const levelChannelId = await stmts.getLevelChannel(guildId);
+  const giveawaysRaw = await stmts.getGiveawaysByGuild(guildId);
+  const giveaways = await Promise.all(
+    giveawaysRaw.map(async (gw) => ({
+      ...gw,
+      entryCount: await stmts.getGiveawayEntryCount(gw.id),
+      created_at_formatted: timestampToDate(gw.created_at),
+    }))
+  );
 
-  const cached = stmts.getGuildCache(guildId);
+  const cached = await stmts.getGuildCache(guildId);
 
   res.render("guild", {
     user,
@@ -181,51 +189,54 @@ app.get("/dashboard/guild/:id", ensureAuth, async (req, res) => {
       levelChannelId,
     },
     giveaways,
+    ticketPanel: ticketPanel || null,
+    ticketPanelOptions,
+    ticketSupportRoles,
   });
 });
 
 // API: Automod settings
-app.post("/api/guild/:id/automod/toggle", ensureAuth, (req, res) => {
+app.post("/api/guild/:id/automod/toggle", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
 
   const { enabled } = req.body;
-  stmts.setAutomodEnabled(guildId, enabled ? 1 : 0);
+  await stmts.setAutomodEnabled(guildId, enabled ? 1 : 0);
   res.json({ success: true });
 });
 
-app.post("/api/guild/:id/automod/spam", ensureAuth, (req, res) => {
+app.post("/api/guild/:id/automod/spam", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
 
   const { threshold } = req.body;
-  stmts.setAutomodSpam(guildId, Number(threshold));
+  await stmts.setAutomodSpam(guildId, Number(threshold));
   res.json({ success: true });
 });
 
-app.post("/api/guild/:id/automod/linkfilter", ensureAuth, (req, res) => {
+app.post("/api/guild/:id/automod/linkfilter", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
 
   const { enabled } = req.body;
-  stmts.setAutomodLinkFilter(guildId, enabled ? 1 : 0);
+  await stmts.setAutomodLinkFilter(guildId, enabled ? 1 : 0);
   res.json({ success: true });
 });
 
-app.post("/api/guild/:id/automod/mentioncap", ensureAuth, (req, res) => {
+app.post("/api/guild/:id/automod/mentioncap", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
 
   const { cap } = req.body;
-  stmts.setAutomodMentionCap(guildId, Number(cap));
+  await stmts.setAutomodMentionCap(guildId, Number(cap));
   res.json({ success: true });
 });
 
-app.post("/api/guild/:id/automod/words/add", ensureAuth, (req, res) => {
+app.post("/api/guild/:id/automod/words/add", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
@@ -234,11 +245,11 @@ app.post("/api/guild/:id/automod/words/add", ensureAuth, (req, res) => {
   if (!word || typeof word !== "string") {
     return res.status(400).json({ error: "Kein Wort angegeben." });
   }
-  stmts.addAutomodWord(guildId, word.toLowerCase());
+  await stmts.addAutomodWord(guildId, word.toLowerCase());
   res.json({ success: true });
 });
 
-app.post("/api/guild/:id/automod/words/remove", ensureAuth, (req, res) => {
+app.post("/api/guild/:id/automod/words/remove", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
@@ -247,16 +258,16 @@ app.post("/api/guild/:id/automod/words/remove", ensureAuth, (req, res) => {
   if (!word || typeof word !== "string") {
     return res.status(400).json({ error: "Kein Wort angegeben." });
   }
-  stmts.removeAutomodWord(guildId, word.toLowerCase());
+  await stmts.removeAutomodWord(guildId, word.toLowerCase());
   res.json({ success: true });
 });
 
-app.post("/api/guild/:id/automod/words/clear", ensureAuth, (req, res) => {
+app.post("/api/guild/:id/automod/words/clear", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
 
-  stmts.clearAutomodWords(guildId);
+  await stmts.clearAutomodWords(guildId);
   res.json({ success: true });
 });
 
@@ -277,53 +288,53 @@ function validateGuildAccess(req: express.Request, res: express.Response, user: 
 }
 
 // API: Leveling
-app.post("/api/guild/:id/leveling/channel", ensureAuth, (req, res) => {
+app.post("/api/guild/:id/leveling/channel", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
   const { channelId } = req.body;
-  stmts.setLevelChannel(guildId, channelId || "");
+  await stmts.setLevelChannel(guildId, channelId || "");
   res.json({ success: true });
 });
 
-app.post("/api/guild/:id/leveling/role/add", ensureAuth, (req, res) => {
+app.post("/api/guild/:id/leveling/role/add", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
   const { level, roleId } = req.body;
   if (!level || !roleId) return res.status(400).json({ error: "Level und RoleId erforderlich." });
-  stmts.addLevelRole(guildId, Number(level), roleId);
+  await stmts.addLevelRole(guildId, Number(level), roleId);
   res.json({ success: true });
 });
 
-app.post("/api/guild/:id/leveling/role/remove", ensureAuth, (req, res) => {
+app.post("/api/guild/:id/leveling/role/remove", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
   const { level } = req.body;
   if (!level) return res.status(400).json({ error: "Level erforderlich." });
-  stmts.removeLevelRole(guildId, Number(level));
+  await stmts.removeLevelRole(guildId, Number(level));
   res.json({ success: true });
 });
 
-app.post("/api/guild/:id/leveling/role/clear", ensureAuth, (req, res) => {
+app.post("/api/guild/:id/leveling/role/clear", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
-  stmts.clearLevelRoles(guildId);
+  await stmts.clearLevelRoles(guildId);
   res.json({ success: true });
 });
 
 // API routes for the dashboard
-app.get("/api/guild/:id/stats", ensureAuth, (req, res) => {
+app.get("/api/guild/:id/stats", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const guild = user.guilds.find((g) => g.id === guildId);
   if (!guild) return res.status(403).json({ error: "No access" });
 
-  const modCount = stmts.getStats(guildId)?.count ?? 0;
-  const ticketCount = stmts.getTicketCount(guildId)?.count ?? 0;
-  const openTicketCount = stmts.getOpenTicketCount(guildId)?.count ?? 0;
+  const modCount = (await stmts.getStats(guildId))?.count ?? 0;
+  const ticketCount = (await stmts.getTicketCount(guildId))?.count ?? 0;
+  const openTicketCount = (await stmts.getOpenTicketCount(guildId))?.count ?? 0;
 
   res.json({ modCount, ticketCount, openTicketCount });
 });
@@ -341,25 +352,27 @@ app.get("/api/guild/:id/members", ensureAuth, async (req, res) => {
     if (!guild) return res.status(404).json({ error: "Server nicht gefunden." });
 
     const members = await guild.members.fetch();
-    const memberList = members
-      .filter((m) => !m.user.bot)
-      .map((m) => {
-        const warns = stmts.getWarns(guildId, m.user.id);
-        return {
-          id: m.user.id,
-          tag: m.user.tag,
-          username: m.user.username,
-          displayName: m.displayName,
-          avatar: m.user.avatar
-            ? `https://cdn.discordapp.com/avatars/${m.user.id}/${m.user.avatar}.png`
-            : null,
-          joinedAt: m.joinedAt?.toISOString() ?? null,
-          roles: m.roles.cache
-            .filter((r) => r.id !== guildId)
-            .map((r) => ({ id: r.id, name: r.name, color: r.hexColor })),
-          warnCount: warns.length,
-        };
-      });
+    const memberList = await Promise.all(
+      members
+        .filter((m) => !m.user.bot)
+        .map(async (m) => {
+          const warns = await stmts.getWarns(guildId, m.user.id);
+          return {
+            id: m.user.id,
+            tag: m.user.tag,
+            username: m.user.username,
+            displayName: m.displayName,
+            avatar: m.user.avatar
+              ? `https://cdn.discordapp.com/avatars/${m.user.id}/${m.user.avatar}.png`
+              : null,
+            joinedAt: m.joinedAt?.toISOString() ?? null,
+            roles: m.roles.cache
+              .filter((r) => r.id !== guildId)
+              .map((r) => ({ id: r.id, name: r.name, color: r.hexColor })),
+            warnCount: warns.length,
+          };
+        })
+    );
 
     res.json(memberList);
   } catch (err) {
@@ -384,8 +397,9 @@ app.get("/api/guild/:id/members/:userId", ensureAuth, async (req, res) => {
     const member = await guild.members.fetch(userId).catch(() => null);
     if (!member) return res.status(404).json({ error: "Mitglied nicht gefunden." });
 
-    const warns = stmts.getWarns(guildId, userId);
-    const modLogs = stmts.getModLogsForUser(guildId, userId);
+    const warns = await stmts.getWarns(guildId, userId);
+    const modLogs = await stmts.getModLogsForUser(guildId, userId);
+    const notes = await stmts.getMemberNotes(guildId, userId);
 
     res.json({
       id: member.user.id,
@@ -410,7 +424,7 @@ app.get("/api/guild/:id/members/:userId", ensureAuth, async (req, res) => {
         created_at_formatted: timestampToDate(log.created_at),
       })),
       communicationDisabledUntil: member.communicationDisabledUntil?.toISOString() ?? null,
-      notes: stmts.getMemberNotes(guildId, userId).map((n: MemberNote) => ({
+      notes: notes.map((n: MemberNote) => ({
         ...n,
         created_at_formatted: timestampToDate(n.created_at),
         updated_at_formatted: n.updated_at !== n.created_at ? timestampToDate(n.updated_at) : null,
@@ -448,7 +462,7 @@ app.post("/api/guild/:id/members/:userId/timeout", ensureAuth, async (req, res) 
     if (!member) return res.status(404).json({ error: "Mitglied nicht gefunden." });
 
     await member.timeout(durationMs, timeoutReason);
-    stmts.insertModLog(guildId, userId, member.user.tag, user.id, user.username, "Timeout", timeoutReason, `${Math.round(durationMs / 1000)}s`);
+    await stmts.insertModLog(guildId, userId, member.user.tag, user.id, user.username, "Timeout", timeoutReason, `${Math.round(durationMs / 1000)}s`);
 
     res.json({ success: true, until: new Date(Date.now() + durationMs).toISOString() });
   } catch (err) {
@@ -475,7 +489,7 @@ app.post("/api/guild/:id/members/:userId/untimeout", ensureAuth, async (req, res
     if (!member) return res.status(404).json({ error: "Mitglied nicht gefunden." });
 
     await member.timeout(null);
-    stmts.insertModLog(guildId, userId, member.user.tag, user.id, user.username, "Untimeout", "Timeout aufgehoben", null);
+    await stmts.insertModLog(guildId, userId, member.user.tag, user.id, user.username, "Untimeout", "Timeout aufgehoben", null);
 
     res.json({ success: true });
   } catch (err) {
@@ -485,21 +499,23 @@ app.post("/api/guild/:id/members/:userId/untimeout", ensureAuth, async (req, res
 });
 
 // API: Member notes
-app.get("/api/guild/:id/members/:userId/notes", ensureAuth, (req, res) => {
+app.get("/api/guild/:id/members/:userId/notes", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
 
   const userId = Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId;
-  const notes = stmts.getMemberNotes(guildId, userId).map((n: MemberNote) => ({
-    ...n,
-    created_at_formatted: timestampToDate(n.created_at),
-    updated_at_formatted: n.updated_at !== n.created_at ? timestampToDate(n.updated_at) : null,
-  }));
-  res.json(notes);
+  const notes = await stmts.getMemberNotes(guildId, userId);
+  res.json(
+    notes.map((n: MemberNote) => ({
+      ...n,
+      created_at_formatted: timestampToDate(n.created_at),
+      updated_at_formatted: n.updated_at !== n.created_at ? timestampToDate(n.updated_at) : null,
+    }))
+  );
 });
 
-app.post("/api/guild/:id/members/:userId/notes", ensureAuth, (req, res) => {
+app.post("/api/guild/:id/members/:userId/notes", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
@@ -514,11 +530,11 @@ app.post("/api/guild/:id/members/:userId/notes", ensureAuth, (req, res) => {
   const guild = botClient.guilds.cache.get(guildId);
   const memberTag = guild?.members.cache.get(userId)?.user.tag ?? userId;
 
-  const noteId = stmts.insertMemberNote(guildId, userId, memberTag, user.id, user.username, note.trim());
+  const noteId = await stmts.insertMemberNote(guildId, userId, memberTag, user.id, user.username, note.trim());
   res.json({ success: true, id: noteId });
 });
 
-app.post("/api/guild/:id/members/:userId/notes/:noteId", ensureAuth, (req, res) => {
+app.post("/api/guild/:id/members/:userId/notes/:noteId", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
@@ -529,18 +545,18 @@ app.post("/api/guild/:id/members/:userId/notes/:noteId", ensureAuth, (req, res) 
     return res.status(400).json({ error: "Notiztext erforderlich." });
   }
 
-  stmts.updateMemberNote(noteId, guildId, note.trim());
+  await stmts.updateMemberNote(noteId, guildId, note.trim());
   res.json({ success: true });
 });
 
-app.delete("/api/guild/:id/members/:userId/notes/:noteId", ensureAuth, (req, res) => {
+app.delete("/api/guild/:id/members/:userId/notes/:noteId", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
   if (!guildId) return;
 
   const noteId = parseInt(Array.isArray(req.params.noteId) ? req.params.noteId[0] : req.params.noteId, 10);
   if (isNaN(noteId)) return res.status(400).json({ error: "Ungültige Notiz-ID." });
-  stmts.deleteMemberNote(noteId, guildId);
+  await stmts.deleteMemberNote(noteId, guildId);
   res.json({ success: true });
 });
 
@@ -592,10 +608,10 @@ app.post("/api/guild/:id/members/:userId/warn", ensureAuth, async (req, res) => 
     if (!member) return res.status(404).json({ error: "Mitglied nicht gefunden." });
 
     // Insert warn into DB
-    stmts.insertWarn(guildId, userId, member.user.tag, user.id, user.username, warnReason);
-    stmts.insertModLog(guildId, userId, member.user.tag, user.id, user.username, "Warn", warnReason, null);
+    await stmts.insertWarn(guildId, userId, member.user.tag, user.id, user.username, warnReason);
+    await stmts.insertModLog(guildId, userId, member.user.tag, user.id, user.username, "Warn", warnReason, null);
 
-    const warnCount = stmts.getWarns(guildId, userId).length;
+    const warnCount = (await stmts.getWarns(guildId, userId)).length;
     const cycleIndex = (warnCount - 1) % 4; // 0,1,2,3
 
     let actionTaken = "";
@@ -625,6 +641,129 @@ app.post("/api/guild/:id/members/:userId/warn", ensureAuth, async (req, res) => 
   }
 });
 
+// API: Ticket Panel – Channels & Roles
+app.get("/api/guild/:id/tickets/channels", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId || !botClient) return res.json([]);
+  try {
+    const guild = botClient.guilds.cache.get(guildId);
+    if (!guild) return res.json([]);
+    const channels = guild.channels.cache
+      .filter((c) => c.type === 0) // GuildText
+      .map((c) => ({ id: c.id, name: c.name }));
+    res.json(channels);
+  } catch { res.json([]); }
+});
+
+app.get("/api/guild/:id/tickets/roles", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId || !botClient) return res.json([]);
+  try {
+    const guild = botClient.guilds.cache.get(guildId);
+    if (!guild) return res.json([]);
+    const roles = guild.roles.cache
+      .filter((r) => r.name !== "@everyone" && !r.managed)
+      .map((r) => ({ id: r.id, name: r.name, color: r.hexColor }));
+    res.json(roles);
+  } catch { res.json([]); }
+});
+
+// API: Ticket Panel Config
+app.get("/api/guild/:id/tickets/panel", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId) return;
+  const panel = await stmts.getTicketPanel(guildId);
+  const options = await stmts.getTicketPanelOptions(guildId);
+  const supportRoles = await stmts.getTicketSupportRoles(guildId);
+  res.json({ panel: panel || null, options, supportRoles });
+});
+
+app.post("/api/guild/:id/tickets/panel", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId || !botClient) return;
+  const { channelId, options } = req.body as { channelId: string; options: { label: string; emoji: string }[] };
+  if (!channelId || !options?.length) return res.status(400).json({ error: "channelId und options benötigt." });
+
+  try {
+    const guild = botClient.guilds.cache.get(guildId);
+    if (!guild) return res.status(500).json({ error: "Guild nicht gefunden." });
+
+    // Save panel config
+    await stmts.setTicketPanel(guildId, channelId, null);
+    await stmts.setTicketPanelOptions(guildId, options);
+
+    // Send/update embed in Discord
+    const { StringSelectMenuBuilder, ActionRowBuilder, EmbedBuilder, StringSelectMenuOptionBuilder } = await import("discord.js");
+    const channel = guild.channels.cache.get(channelId);
+    if (!channel || !channel.isTextBased() || "send" in channel === false) {
+      return res.status(500).json({ error: "Kanal nicht gefunden." });
+    }
+
+    const selectOpts = options.map((opt) =>
+      new StringSelectMenuOptionBuilder()
+        .setLabel(opt.label)
+        .setEmoji(opt.emoji)
+        .setValue(opt.label)
+    );
+
+    const select = new StringSelectMenuBuilder()
+      .setCustomId("ticket_open")
+      .setPlaceholder("Wähle einen Ticket-Grund...")
+      .addOptions(selectOpts);
+
+    const row = new ActionRowBuilder().addComponents(select);
+
+    const embed = new EmbedBuilder()
+      .setTitle("🎫 Ticket-System")
+      .setDescription("Wähle unten eine Option aus, um ein Ticket zu öffnen!")
+      .setColor(0xf799b9)
+      .setFooter({ text: "pOky Ticket-System" });
+
+    const existingPanel = await stmts.getTicketPanel(guildId);
+    if (existingPanel?.message_id) {
+      try {
+        const oldMsg = await (channel as any).messages.fetch(existingPanel.message_id);
+        if (oldMsg) await oldMsg.edit({ embeds: [embed], components: [row] });
+      } catch {
+        const msg = await (channel as any).send({ embeds: [embed], components: [row] });
+        await stmts.setTicketPanel(guildId, channelId, msg.id);
+      }
+    } else {
+      const msg = await (channel as any).send({ embeds: [embed], components: [row] });
+      await stmts.setTicketPanel(guildId, channelId, msg.id);
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Fehler beim Senden des Ticket-Panels:", err);
+    res.status(500).json({ error: "Fehler beim Senden." });
+  }
+});
+
+app.post("/api/guild/:id/tickets/support-role/add", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId) return;
+  const { roleId } = req.body as { roleId: string };
+  if (!roleId) return res.status(400).json({ error: "roleId benötigt." });
+  await stmts.addTicketSupportRole(guildId, roleId);
+  res.json({ success: true });
+});
+
+app.post("/api/guild/:id/tickets/support-role/remove", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId) return;
+  const { roleId } = req.body as { roleId: string };
+  if (!roleId) return res.status(400).json({ error: "roleId benötigt." });
+  await stmts.removeTicketSupportRole(guildId, roleId);
+  res.json({ success: true });
+});
+
 // API: Ticket messages (history)
 app.get("/api/guild/:id/tickets/:channelId/messages", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
@@ -637,7 +776,7 @@ app.get("/api/guild/:id/tickets/:channelId/messages", ensureAuth, async (req, re
 
   try {
     // Verify the channel is actually a registered ticket in this guild
-    const ticket = stmts.getTicketByChannel(channelId);
+    const ticket = await stmts.getTicketByChannel(channelId);
     if (!ticket || ticket.guild_id !== guildId) {
       return res.status(404).json({ error: "Ticket nicht gefunden." });
     }

@@ -86,8 +86,8 @@ type AutomodConfig = {
   automod_mention_cap: number;
 };
 
-function getConfig(guildId: string): AutomodConfig {
-  const row = stmts.getAutomodConfig(guildId);
+async function getConfig(guildId: string): Promise<AutomodConfig> {
+  const row = await stmts.getAutomodConfig(guildId);
   return {
     automod_enabled: (row as { automod_enabled: number } | undefined)?.automod_enabled ?? 0,
     automod_spam_threshold: (row as { automod_spam_threshold: number } | undefined)?.automod_spam_threshold ?? 0,
@@ -106,8 +106,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   await interaction.deferReply({ ephemeral: true });
 
   if (subcommand === "status") {
-    const config = getConfig(interaction.guild.id);
-    const words = stmts.getAutomodWords(interaction.guild.id) as string[];
+    const config = await getConfig(interaction.guild.id);
+    const words = await stmts.getAutomodWords(interaction.guild.id) as string[];
 
     const embed = new EmbedBuilder()
       .setTitle("🛡️ Auto-Mod Einstellungen")
@@ -126,14 +126,14 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   if (subcommand === "toggle") {
     const enabled = interaction.options.getBoolean("aktiviert", true);
-    stmts.setAutomodEnabled(interaction.guild.id, enabled ? 1 : 0);
+    await stmts.setAutomodEnabled(interaction.guild.id, enabled ? 1 : 0);
     await interaction.editReply(`🛡️ Auto-Mod **${enabled ? "aktiviert" : "deaktiviert"}**.`);
     return;
   }
 
   if (subcommand === "spam") {
     const threshold = interaction.options.getInteger("nachrichten", true);
-    stmts.setAutomodSpam(interaction.guild.id, threshold);
+    await stmts.setAutomodSpam(interaction.guild.id, threshold);
     await interaction.editReply(
       threshold > 0
         ? `🔁 Anti-Spam: Max **${threshold}** Nachrichten pro 5 Sekunden.`
@@ -144,14 +144,14 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   if (subcommand === "linkfilter") {
     const enabled = interaction.options.getBoolean("aktiviert", true);
-    stmts.setAutomodLinkFilter(interaction.guild.id, enabled ? 1 : 0);
+    await stmts.setAutomodLinkFilter(interaction.guild.id, enabled ? 1 : 0);
     await interaction.editReply(`🔗 Link-Filter **${enabled ? "aktiviert" : "deaktiviert"}**.`);
     return;
   }
 
   if (subcommand === "mentioncap") {
     const cap = interaction.options.getInteger("anzahl", true);
-    stmts.setAutomodMentionCap(interaction.guild.id, cap);
+    await stmts.setAutomodMentionCap(interaction.guild.id, cap);
     await interaction.editReply(
       cap > 0
         ? `📢 Mention-Cap: Max **${cap}** Mentions pro Nachricht.`
@@ -165,7 +165,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const wort = interaction.options.getString("wort");
 
     if (aktion === "list") {
-      const words = stmts.getAutomodWords(interaction.guild.id) as string[];
+      const words = await stmts.getAutomodWords(interaction.guild.id) as string[];
       if (words.length === 0) {
         await interaction.editReply("📋 Keine Bad Words in der Liste.");
         return;
@@ -175,7 +175,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     if (aktion === "clear") {
-      stmts.clearAutomodWords(interaction.guild.id);
+      await stmts.clearAutomodWords(interaction.guild.id);
       await interaction.editReply("🗑️ Alle Bad Words gelöscht.");
       return;
     }
@@ -186,13 +186,13 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     if (aktion === "add") {
-      stmts.addAutomodWord(interaction.guild.id, wort.toLowerCase());
+      await stmts.addAutomodWord(interaction.guild.id, wort.toLowerCase());
       await interaction.editReply(`✅ \`${wort}\` zur Bad-Word-Liste hinzugefügt.`);
       return;
     }
 
     if (aktion === "remove") {
-      stmts.removeAutomodWord(interaction.guild.id, wort.toLowerCase());
+      await stmts.removeAutomodWord(interaction.guild.id, wort.toLowerCase());
       await interaction.editReply(`🗑️ \`${wort}\` aus der Bad-Word-Liste entfernt.`);
       return;
     }

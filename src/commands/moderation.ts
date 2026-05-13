@@ -78,7 +78,7 @@ async function logAction(
   action: string,
   reason: string | null,
   duration?: string | null
-): Promise<void> {    stmts.insertModLog(
+): Promise<void> {    await stmts.insertModLog(
       guildId,
       target.id,
       target.tag,
@@ -167,7 +167,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const user = interaction.options.getUser("nutzer", true);
     const reason = interaction.options.getString("grund") ?? "Kein Grund angegeben";
 
-    stmts.insertWarn(
+    await stmts.insertWarn(
       interaction.guild.id,
       user.id,
       user.tag,
@@ -177,14 +177,14 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     );
     await logAction(interaction.guild.id, user, interaction.user, "Warn", reason);
 
-    const warnCount = stmts.getWarns(interaction.guild.id, user.id).length;
+    const warnCount = (await stmts.getWarns(interaction.guild.id, user.id)).length;
     await interaction.editReply(`⚠️ **${user.tag}** wurde verwarnt.\nGrund: ${reason}\nVerwarnungen: ${warnCount}`);
     return;
   }
 
   if (subcommand === "warns") {
     const user = interaction.options.getUser("nutzer", true);
-    const warns = stmts.getWarns(interaction.guild.id, user.id);
+    const warns = await stmts.getWarns(interaction.guild.id, user.id);
 
     if (warns.length === 0) {
       await interaction.editReply(`**${user.tag}** hat keine Verwarnungen.`);
@@ -200,8 +200,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   if (subcommand === "clearwarns") {
     const user = interaction.options.getUser("nutzer", true);
-    const count = stmts.getWarns(interaction.guild.id, user.id).length;
-    stmts.clearWarns(interaction.guild.id, user.id);
+    const count = (await stmts.getWarns(interaction.guild.id, user.id)).length;
+    await stmts.clearWarns(interaction.guild.id, user.id);
     await interaction.editReply(`✅ Alle Verwarnungen für **${user.tag}** gelöscht (${count} Stück).`);
     return;
   }
@@ -210,9 +210,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const user = interaction.options.getUser("nutzer");
     let logs;
     if (user) {
-      logs = stmts.getModLogsForUser(interaction.guild.id, user.id);
+      logs = await stmts.getModLogsForUser(interaction.guild.id, user.id);
     } else {
-      logs = stmts.getModLogs(interaction.guild.id);
+      logs = await stmts.getModLogs(interaction.guild.id);
     }
 
     if (logs.length === 0) {

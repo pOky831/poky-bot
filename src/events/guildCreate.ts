@@ -21,7 +21,7 @@ export async function handleGuildCreate(guild: Guild): Promise<void> {
   // Cache guild for dashboard
   try {
     const fullGuild = await guild.fetch();
-    stmts.upsertGuildCache(
+    await stmts.upsertGuildCache(
       fullGuild.id,
       fullGuild.name,
       fullGuild.icon,

@@ -23,7 +23,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   }
 
   const subcommand = interaction.options.getSubcommand();
-  const existing = stmts.getGuildSettings(interaction.guildId);
+  const existing = await stmts.getGuildSettings(interaction.guildId);
 
   if (subcommand === "set") {
     const channel = interaction.options.getChannel("kanal", true);
@@ -32,7 +32,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
-    stmts.setGuildSettings(
+    await stmts.setGuildSettings(
       interaction.guildId,
       channel.id,
       existing?.ticket_category_id ?? null,
@@ -44,7 +44,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     await interaction.reply({ content: `Willkommenskanal gesetzt: <#${channel.id}>`, ephemeral: true });
   } else if (subcommand === "off") {
-    stmts.setGuildSettings(
+    await stmts.setGuildSettings(
       interaction.guildId,
       null,
       existing?.ticket_category_id ?? null,

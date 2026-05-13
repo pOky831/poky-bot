@@ -121,12 +121,12 @@ async function endGiveaway(giveaway: Giveaway, client: import("discord.js").Clie
 
   const channel = (await client.channels.fetch(giveaway.channel_id).catch(() => null)) as TextChannel | null;
   if (!channel || !giveaway.message_id) {
-    stmts.endGiveaway(giveaway.id);
+    await stmts.endGiveaway(giveaway.id);
     return [];
   }
 
   const message = await channel.messages.fetch(giveaway.message_id).catch(() => null);
-  const entries = stmts.getGiveawayEntries(giveaway.id);
+  const entries = await stmts.getGiveawayEntries(giveaway.id);
   const winners = pickWinners(entries, giveaway.winner_count);
 
   // Clear timer first
@@ -150,7 +150,7 @@ async function endGiveaway(giveaway: Giveaway, client: import("discord.js").Clie
   }
 
   // Now mark as ended in DB
-  stmts.endGiveaway(giveaway.id);
+  await stmts.endGiveaway(giveaway.id);
 
   // Announce winners
   if (winners.length > 0) {
@@ -169,7 +169,7 @@ async function rerollGiveaway(giveaway: Giveaway, client: import("discord.js").C
   if (!channel || !giveaway.message_id) return [];
 
   const message = await channel.messages.fetch(giveaway.message_id).catch(() => null);
-  const entries = stmts.getGiveawayEntries(giveaway.id);
+  const entries = await stmts.getGiveawayEntries(giveaway.id);
   const winners = pickWinners(entries, giveaway.winner_count);
 
   // Update the giveaway message
@@ -199,7 +199,7 @@ export async function handleGiveawayButton(interaction: ButtonInteraction): Prom
   const giveawayId = Number(interaction.customId.replace("giveaway_enter_", ""));
   if (isNaN(giveawayId)) return;
 
-  const giveaway = stmts.getGiveaway(giveawayId);
+  const giveaway = await stmts.getGiveaway(giveawayId);
   if (!giveaway || giveaway.status !== "active") {
     await interaction.reply({ content: "Dieses Giveaway ist nicht mehr aktiv.", ephemeral: true });
     return;
@@ -212,8 +212,8 @@ export async function handleGiveawayButton(interaction: ButtonInteraction): Prom
     return;
   }
 
-  stmts.addGiveawayEntry(giveawayId, interaction.user.id);
-  const entryCount = stmts.getGiveawayEntryCount(giveawayId);
+  await stmts.addGiveawayEntry(giveawayId, interaction.user.id);
+  const entryCount = await stmts.getGiveawayEntryCount(giveawayId);
 
   // Update the embed with new participant count
   const channel = interaction.channel as TextChannel | null;
@@ -253,7 +253,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     const endsAt = Math.floor(Date.now() / 1000) + durationMinutes * 60;
-    const giveawayId = stmts.createGiveaway(
+    const giveawayId = await stmts.createGiveaway(
       interaction.guild.id,
       targetChannel.id,
       prize,
@@ -262,7 +262,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       interaction.user.id
     );
 
-    const giveaway = stmts.getGiveaway(giveawayId)!;
+    const giveaway = (await stmts.getGiveaway(giveawayId))!;
     const embed = createGiveawayEmbed(giveaway, 0);
 
     const button = new ButtonBuilder()
@@ -273,15 +273,19 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
 
     const message = await targetChannel.send({ embeds: [embed], components: [row] });
-    stmts.setGiveawayMessage(giveawayId, message.id);
+    await stmts.setGiveawayMessage(giveawayId, message.id);
 
     // Set auto-end timer
     const timeUntilEnd = (endsAt - Math.floor(Date.now() / 1000)) * 1000;
     const client = interaction.client;
-    const timer = setTimeout(() => {
-      const gw = stmts.getGiveaway(giveawayId);
-      if (gw && gw.status === "active") {
-        endGiveaway(gw, client);
+    const timer = setTimeout(async () => {
+      try {
+        const gw = await stmts.getGiveaway(giveawayId);
+        if (gw && gw.status === "active") {
+          endGiveaway(gw, client).catch((err) => console.error("Giveaway auto-end error:", err));
+        }
+      } catch (err) {
+        console.error("Giveaway timer error:", err);
       }
       activeTimers.delete(giveawayId);
     }, timeUntilEnd);
@@ -295,7 +299,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   if (subcommand === "end") {
     const messageId = interaction.options.getString("nachrichten_id", true);
-    const giveaway = stmts.getGiveawayByMessage(messageId);
+    const giveaway = await stmts.getGiveawayByMessage(messageId);
 
     if (!giveaway) {
       await interaction.reply({ content: "❌ Kein Giveaway mit dieser Nachrichten-ID gefunden.", ephemeral: true });
@@ -317,7 +321,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   if (subcommand === "reroll") {
     const messageId = interaction.options.getString("nachrichten_id", true);
-    const giveaway = stmts.getGiveawayByMessage(messageId);
+    const giveaway = await stmts.getGiveawayByMessage(messageId);
 
     if (!giveaway) {
       await interaction.reply({ content: "❌ Kein Giveaway mit dieser Nachrichten-ID gefunden.", ephemeral: true });
@@ -339,18 +343,22 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 }
 
 // Restart active giveaway timers (called from ready.ts)
-export function startGiveawayTimers(client: import("discord.js").Client): void {
-  const activeGiveaways = stmts.getActiveGiveaways();
+export async function startGiveawayTimers(client: import("discord.js").Client): Promise<void> {
+  const activeGiveaways = await stmts.getActiveGiveaways();
   for (const giveaway of activeGiveaways) {
     const timeUntilEnd = (giveaway.ends_at - Math.floor(Date.now() / 1000)) * 1000;
     if (timeUntilEnd <= 0) {
-      endGiveaway(giveaway, client);
+      endGiveaway(giveaway, client).catch((err) => console.error("Giveaway auto-end error:", err));
       continue;
     }
-    const timer = setTimeout(() => {
-      const gw = stmts.getGiveaway(giveaway.id);
-      if (gw && gw.status === "active") {
-        endGiveaway(gw, client);
+    const timer = setTimeout(async () => {
+      try {
+        const gw = await stmts.getGiveaway(giveaway.id);
+        if (gw && gw.status === "active") {
+          endGiveaway(gw, client).catch((err) => console.error("Giveaway auto-end error:", err));
+        }
+      } catch (err) {
+        console.error("Giveaway timer error:", err);
       }
       activeTimers.delete(giveaway.id);
     }, timeUntilEnd);

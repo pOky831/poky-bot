@@ -41,7 +41,7 @@ export async function handleMessageCreate(message: Message): Promise<void> {
   const guildId = message.guild.id;
 
   // Fetch automod config
-  const configRow = stmts.getAutomodConfig(guildId) as {
+  const configRow = await stmts.getAutomodConfig(guildId) as {
     automod_enabled: number;
     automod_spam_threshold: number;
     automod_link_filter: number;
@@ -54,7 +54,7 @@ export async function handleMessageCreate(message: Message): Promise<void> {
   const channel = message.channel as TextChannel;
 
   // ── Bad Word Filter ──
-  const badWords = stmts.getAutomodWords(guildId) as string[];
+  const badWords = await stmts.getAutomodWords(guildId) as string[];
   if (badWords.length > 0) {
     const content = message.content.toLowerCase();
     const foundWord = badWords.find((word) => content.includes(word.toLowerCase()));
@@ -164,7 +164,7 @@ export async function handleMessageCreate(message: Message): Promise<void> {
     xpCooldowns.set(xpKey, now);
 
     const xpGain = Math.floor(Math.random() * (XP_MAX - XP_MIN + 1)) + XP_MIN;
-    const current = stmts.getUserXp(guildId, message.author.id);
+    const current = await stmts.getUserXp(guildId, message.author.id);
     const newXp = (current?.xp ?? 0) + xpGain;
     const newLevel = (() => {
       let lvl = current?.level ?? 1;
@@ -172,11 +172,11 @@ export async function handleMessageCreate(message: Message): Promise<void> {
       return lvl;
     })();
 
-    stmts.addUserXp(guildId, message.author.id, xpGain, newLevel);
+    await stmts.addUserXp(guildId, message.author.id, xpGain, newLevel);
 
     // Check if user leveled up and assign role rewards
     if (newLevel > (current?.level ?? 1)) {
-      const levelRoles = stmts.getLevelRoles(guildId);
+      const levelRoles = await stmts.getLevelRoles(guildId);
       for (const lr of levelRoles) {
         if (lr.level <= newLevel && lr.level > (current?.level ?? 0)) {
           const member = await message.guild!.members.fetch(message.author.id).catch(() => null);

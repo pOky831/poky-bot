@@ -11,7 +11,7 @@ export async function handleReady(client: Client): Promise<void> {
   for (const guild of client.guilds.cache.values()) {
     try {
       const fullGuild = await guild.fetch();
-      stmts.upsertGuildCache(
+      await stmts.upsertGuildCache(
         fullGuild.id,
         fullGuild.name,
         fullGuild.icon,
@@ -49,5 +49,5 @@ export async function handleReady(client: Client): Promise<void> {
   }
 
   // Restart giveaway timers for active giveaways
-  startGiveawayTimers(client);
+  await startGiveawayTimers(client);
 }

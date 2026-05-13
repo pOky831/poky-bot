@@ -1,6 +1,17 @@
-import { ChatInputCommandInteraction, ButtonInteraction, Interaction, MessageFlags } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  ButtonInteraction,
+  StringSelectMenuInteraction,
+  Interaction,
+  MessageFlags,
+  ChannelType,
+  PermissionFlagsBits,
+  OverwriteType,
+  TextChannel,
+} from "discord.js";
 import { commands } from "../bot.js";
 import { handleGiveawayButton } from "../commands/giveaway.js";
+import { stmts } from "../database/db.js";
 
 export async function handleInteractionCreate(interaction: Interaction): Promise<void> {
   if (interaction.isChatInputCommand()) {
@@ -36,5 +47,109 @@ export async function handleInteractionCreate(interaction: Interaction): Promise
       }
     }
     return;
+  }
+
+  if (interaction.isStringSelectMenu()) {
+    if (interaction.customId === "ticket_open") {
+      try {
+        await handleTicketSelect(interaction);
+      } catch (error) {
+        console.error("❌ Fehler bei Ticket-Select:", error);
+        const reply = { content: "Ein Fehler ist aufgetreten.", flags: MessageFlags.Ephemeral as number };
+        if (interaction.replied || interaction.deferred) {
+          await interaction.editReply(reply);
+        } else {
+          await interaction.reply(reply);
+        }
+      }
+    }
+    return;
+  }
+}
+
+async function handleTicketSelect(interaction: StringSelectMenuInteraction): Promise<void> {
+  const guild = interaction.guild;
+  if (!guild) {
+    await interaction.reply({ content: "Nur auf einem Server nutzbar.", ephemeral: true });
+    return;
+  }
+
+  const selectedOption = interaction.values[0];
+
+  const settings = await stmts.getGuildSettings(guild.id);
+  if (!settings?.ticket_category_id) {
+    await interaction.reply({ content: "Ticket-System ist nicht eingerichtet. Ein Admin muss es konfigurieren.", ephemeral: true });
+    return;
+  }
+
+  await interaction.deferReply({ ephemeral: true });
+
+  // Check if user already has an open ticket
+  const openTickets = await stmts.getOpenTickets(guild.id);
+  const existing = openTickets.find((t) => t.creator_id === interaction.user.id);
+  if (existing) {
+    await interaction.editReply(`Du hast bereits ein offenes Ticket: <#${existing.channel_id}>`);
+    return;
+  }
+
+  const category = await guild.channels.fetch(settings.ticket_category_id).catch(() => null);
+  if (!category || category.type !== ChannelType.GuildCategory) {
+    await interaction.editReply("Ticket-Kategorie nicht gefunden. Bitte neu einrichten.");
+    return;
+  }
+
+  // Build permission overwrites with support roles
+  const supportRoles = await stmts.getTicketSupportRoles(guild.id);
+  const permissionOverwrites = [
+    {
+      id: guild.id,
+      type: OverwriteType.Role,
+      deny: [PermissionFlagsBits.ViewChannel],
+    },
+    {
+      id: interaction.user.id,
+      type: OverwriteType.Member,
+      allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory],
+    },
+    {
+      id: interaction.client.user.id,
+      type: OverwriteType.Member,
+      allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageChannels],
+    },
+  ];
+
+  for (const sr of supportRoles) {
+    permissionOverwrites.push({
+      id: sr.role_id,
+      type: OverwriteType.Role,
+      allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory],
+    });
+  }
+
+  const channelName = `ticket-${interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+
+  const ticketChannel = await guild.channels.create({
+    name: channelName,
+    type: ChannelType.GuildText,
+    parent: category.id,
+    permissionOverwrites,
+  });
+
+  await stmts.insertTicket(guild.id, ticketChannel.id, interaction.user.id, interaction.user.tag, selectedOption);
+
+  await ticketChannel.send({
+    content: `Hallo <@${interaction.user.id}>!\nEin Team-Mitglied wird sich gleich um dich kümmern.\n**Grund:** ${selectedOption}`,
+  });
+
+  await interaction.editReply(`Ticket erstellt: <#${ticketChannel.id}>`);
+
+  // Log
+  if (settings.ticket_log_channel_id) {
+    const logChannel = guild.channels.cache.get(settings.ticket_log_channel_id) as TextChannel | undefined;
+    if (logChannel?.send) {
+      await logChannel.send(
+        `🎫 Ticket erstellt von **${interaction.user.tag}** — <#${ticketChannel.id}> — Grund: ${selectedOption}`
+      );
+    }
   }
 }
