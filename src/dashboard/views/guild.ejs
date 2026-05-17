@@ -113,7 +113,9 @@
     <button class="hero-nav-btn" onclick="switchTab(6)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Mitglieder</button>
   </div>
 
-  <div class="content-area" id="content-area"></div>
+  <div class="content-area" id="content-area">
+    <div class="content-inner" id="content-inner"></div>
+  </div>
 </main>
 
 <!-- Warn Modal -->
@@ -215,28 +217,54 @@
 <script>
 var guildId = '<%= guild.id %>';
 
+var activeTab = -1;
+var tabTimeout = null;
+
 function switchTab(i, sidebarBtn) {
+  if (i === activeTab) return;
+
   // Update sidebar tabs
   document.querySelectorAll('.tab-btn').forEach(function(b, j) { b.classList.toggle('active', j === i); });
   // Update hero nav buttons
   document.querySelectorAll('.hero-nav-btn').forEach(function(b, j) { b.classList.toggle('active', j === i); });
 
-  var c = document.getElementById('content-area');
+  var inner = document.getElementById('content-inner');
   var v = getTabContent(i);
-  c.innerHTML = '<div class="content-inner">' + v + '</div>';
 
-  // Animate stat counters
-  requestAnimationFrame(function() {
-    document.querySelectorAll('.stat-counter').forEach(function(el) {
-      var val = parseInt(el.getAttribute('data-val')) || 0;
-      animateValue(el, 0, val, 1000);
+  // Clear any pending tab switch
+  if (tabTimeout) clearTimeout(tabTimeout);
+
+  // Fade out old content
+  if (activeTab !== -1) {
+    inner.style.opacity = '0';
+    inner.style.transform = 'translateY(12px)';
+  }
+
+  tabTimeout = setTimeout(function() {
+    inner.innerHTML = v;
+    // Fade in new content
+    requestAnimationFrame(function() {
+      inner.style.opacity = '1';
+      inner.style.transform = 'translateY(0)';
     });
-  });
 
-  // Load members if tab 6
-  if (i === 6 && allMembers.length === 0) { loadMembers(); }
-  // Load ticket channels if tab 4
-  if (i === 4) { loadTicketChannels(); loadSupportRolesList(); }
+    // Animate stat counters
+    requestAnimationFrame(function() {
+      document.querySelectorAll('.stat-counter').forEach(function(el) {
+        var val = parseInt(el.getAttribute('data-val')) || 0;
+        animateValue(el, 0, val, 1000);
+      });
+    });
+
+    // Load members if tab 6
+    if (i === 6 && allMembers.length === 0) { loadMembers(); }
+    // Load ticket channels if tab 4
+    if (i === 4) { loadTicketChannels(); loadSupportRolesList(); }
+
+    tabTimeout = null;
+  }, activeTab === -1 ? 0 : 180);
+
+  activeTab = i;
 }
 
 function animateValue(el, start, end, duration) {
@@ -486,7 +514,7 @@ function getMembersTab() {
             '<button class="btn btn-sm btn-secondary member-detail-back" onclick="closeMemberDetail()">← Zurück</button>' +
             '<div class="member-detail-actions">' +
               '<button class="btn btn-sm btn-pink btn-warn" onclick="openWarnModal()">⚠️ Verwarnen</button>' +
-              '<button class="btn btn-sm btn-pink btn-timeout-btn" onclick="openTimeoutModal()">⏱️ Timeout</button>' +
+              '<button class="btn btn-sm btn-pink btn-timeout-btn" id="member-timeout-btn" onclick="openTimeoutModal()">⏱️ Timeout</button>' +
               '<button class="btn btn-sm btn-pink btn-note-btn" onclick="openNoteModal()">📝 Notiz</button>' +
             '</div>' +
           '</div>' +
@@ -747,10 +775,15 @@ function renderMemberDetail(m) {
   else { avatarEl.style.display = 'none'; }
 
   var timeoutRow = document.getElementById('member-stat-timeout-row');
+  var timeoutBtn = document.getElementById('member-timeout-btn');
   if (m.communicationDisabledUntil) {
     timeoutRow.style.display = '';
     document.getElementById('member-stat-timeout').textContent = new Date(m.communicationDisabledUntil).toLocaleString('de-DE');
-  } else { timeoutRow.style.display = 'none'; }
+    if (timeoutBtn) { timeoutBtn.textContent = '✅ Timeout aufheben'; timeoutBtn.className = 'btn btn-sm btn-save'; timeoutBtn.onclick = removeTimeout; }
+  } else {
+    timeoutRow.style.display = 'none';
+    if (timeoutBtn) { timeoutBtn.textContent = '⏱️ Timeout'; timeoutBtn.className = 'btn btn-sm btn-pink btn-timeout-btn'; timeoutBtn.onclick = openTimeoutModal; }
+  }
 
   var rolesContainer = document.getElementById('member-roles-tags');
   rolesContainer.innerHTML = '';
@@ -816,6 +849,24 @@ function closeMemberDetail() {
   var detailSide = document.getElementById('member-detail-side');
   detailSide.querySelector('.member-detail-placeholder').style.display = '';
   document.getElementById('member-detail-content').style.display = 'none';
+  // Reset timeout btn
+  var timeoutBtn = document.getElementById('member-timeout-btn');
+  if (timeoutBtn) { timeoutBtn.textContent = '⏱️ Timeout'; timeoutBtn.className = 'btn btn-sm btn-pink btn-timeout-btn'; timeoutBtn.onclick = openTimeoutModal; }
+}
+
+function removeTimeout() {
+  if (!selectedMemberId) return;
+  if (!confirm('Timeout wirklich aufheben?')) return;
+  var btn = document.getElementById('member-timeout-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Hebe auf...'; }
+  fetch('/api/guild/' + guildId + '/members/' + selectedMemberId + '/untimeout', { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) showMemberDetail(selectedMemberId);
+      else alert('Fehler: ' + (data.error || 'Unbekannt'));
+    })
+    .catch(function() { alert('Fehler beim Aufheben.'); })
+    .finally(function() { if (btn) { btn.disabled = false; btn.textContent = '✅ Timeout aufheben'; } });
 }
 
 // ══════════════════════════════════════════════
