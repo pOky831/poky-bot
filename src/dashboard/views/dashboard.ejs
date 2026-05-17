@@ -90,27 +90,24 @@
     </div>
     <div class="hero-meta">
       <h1>Willkommen, <%= user.username %></h1>
-      <p>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;opacity:0.4"><path d="M3 21v-4a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v4"/><circle cx="12" cy="7" r="4"/></svg>
-        Wähle einen Server aus, den du verwalten möchtest
-      </p>
+      <p>Wähle einen Server aus, den du verwalten möchtest</p>
     </div>
   </div>
 
   <div class="content-area">
     <% if (guilds.length === 0) { %>
-      <div class="empty" style="padding:64px 24px">
-        <div style="font-size:48px;margin-bottom:16px;opacity:0.3">🔒</div>
-        <h2 style="font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text)">Keine Server gefunden</h2>
+      <div class="empty-state-wrapper">
+        <div class="empty-state-icon">🔒</div>
+        <h2>Keine Server gefunden</h2>
         <p>Du hast auf keinem Server Admin-Rechte. Lade den Bot auf einen Server ein, um loszulegen.</p>
         <% if (typeof clientId !== 'undefined') { %>
-          <a href="https://discord.com/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-primary" style="margin-top:20px">Bot einladen</a>
+          <a href="https://discord.com/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-primary" style="margin-top:24px">Bot einladen</a>
         <% } %>
       </div>
     <% } else { %>
       <div class="content-inner">
         <% var totalMembers = guilds.reduce(function(sum, g) { return sum + (g.memberCount || 0); }, 0); %>
-        <div class="stats-bar stagger" style="margin-bottom:24px">
+        <div class="stats-bar stagger" style="margin-bottom:28px">
           <div class="stat-item">
             <h3><span class="stat-counter" data-val="<%= guilds.length %>">0</span></h3>
             <p>Verwaltbare Server</p>
@@ -130,8 +127,8 @@
         </div>
 
         <div class="guild-grid" id="guild-grid">
-          <% guilds.forEach(function(g) { %>
-            <a href="/dashboard/guild/<%= g.id %>" class="guild-card" data-search="<%= g.name.toLowerCase() %>">
+          <% guilds.forEach(function(g, i) { %>
+            <a href="/dashboard/guild/<%= g.id %>" class="guild-card stagger-card" data-search="<%= g.name.toLowerCase() %>" style="animation-delay:<%= 0.08 + i*0.05 %>s">
               <div class="guild-icon">
                 <% if (g.icon) { %>
                   <img src="<%= g.icon %>?size=128" alt="<%= g.name %>">

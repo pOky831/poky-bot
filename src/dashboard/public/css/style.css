@@ -127,7 +127,7 @@ canvas#bg {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 80px;
+  gap: 100px;
 }
 
 .landing-hero-left {
@@ -192,29 +192,36 @@ canvas#bg {
 
 /* Landing Feature Cards */
 .landing-hero-right {
-  width: 420px;
+  width: 460px;
   flex-shrink: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
   animation: fadeSlideUp 0.6s ease 0.2s both;
   perspective: 800px;
+  margin-right: -20px;
 }
 
 .feature-card-new {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 20px;
-  border-radius: 14px;
+  padding: 22px;
+  border-radius: 16px;
   background: rgba(255,255,255,0.015);
-  border: 1px solid rgba(255,255,255,0.05);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   cursor: default;
-  transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+  transition: all 0.45s cubic-bezier(0.4,0,0.2,1);
   position: relative; overflow: hidden;
   animation: cardIn 0.5s ease both;
+}
+
+.feature-card-new:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.35);
 }
 
 .feature-card-new::before {
@@ -254,29 +261,25 @@ canvas#bg {
 .feature-card-new:nth-child(5)::after { background: linear-gradient(90deg, transparent, #B45EFF, transparent); }
 .feature-card-new:nth-child(6)::after { background: linear-gradient(90deg, transparent, #FF8FAB, transparent); }
 
-.feature-card-new:nth-child(n+3) { margin-top: 16px; }
-
-.feature-card-new:hover {
-  border-color: rgba(255,255,255,0.1);
-  transform: translateY(-5px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+.feature-card-new {
+  margin-top: 0 !important;
 }
 
-.feature-card-new:nth-child(1):hover { border-color: rgba(255,94,138,0.2); box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 20px rgba(255,94,138,0.04); }
-.feature-card-new:nth-child(2):hover { border-color: rgba(255,122,158,0.2); box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 20px rgba(255,122,158,0.04); }
-.feature-card-new:nth-child(3):hover { border-color: rgba(94,138,255,0.2); box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 20px rgba(94,138,255,0.04); }
-.feature-card-new:nth-child(4):hover { border-color: rgba(94,255,138,0.2); box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 20px rgba(94,255,138,0.04); }
-.feature-card-new:nth-child(5):hover { border-color: rgba(180,94,255,0.2); box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 20px rgba(180,94,255,0.04); }
-.feature-card-new:nth-child(6):hover { border-color: rgba(255,143,171,0.2); box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 20px rgba(255,143,171,0.04); }
+.feature-card-new:nth-child(1):hover { border-color: rgba(255,94,138,0.25); box-shadow: 0 16px 48px rgba(0,0,0,0.35), 0 0 30px rgba(255,94,138,0.06); }
+.feature-card-new:nth-child(2):hover { border-color: rgba(255,122,158,0.25); box-shadow: 0 16px 48px rgba(0,0,0,0.35), 0 0 30px rgba(255,122,158,0.06); }
+.feature-card-new:nth-child(3):hover { border-color: rgba(94,138,255,0.25); box-shadow: 0 16px 48px rgba(0,0,0,0.35), 0 0 30px rgba(94,138,255,0.06); }
+.feature-card-new:nth-child(4):hover { border-color: rgba(94,255,138,0.25); box-shadow: 0 16px 48px rgba(0,0,0,0.35), 0 0 30px rgba(94,255,138,0.06); }
+.feature-card-new:nth-child(5):hover { border-color: rgba(180,94,255,0.25); box-shadow: 0 16px 48px rgba(0,0,0,0.35), 0 0 30px rgba(180,94,255,0.06); }
+.feature-card-new:nth-child(6):hover { border-color: rgba(255,143,171,0.25); box-shadow: 0 16px 48px rgba(0,0,0,0.35), 0 0 30px rgba(255,143,171,0.06); }
 
 .card-icon-new {
-  font-size: 18px;
-  width: 38px; height: 38px;
+  font-size: 20px;
+  width: 42px; height: 42px;
   display: flex; align-items: center; justify-content: center;
-  border-radius: 10px;
+  border-radius: 12px;
   background: rgba(255,255,255,0.025);
-  border: 1px solid rgba(255,255,255,0.04);
-  transition: all 0.35s ease;
+  border: 1px solid rgba(255,255,255,0.03);
+  transition: all 0.4s var(--ease-out);
   position: relative; z-index: 1;
 }
 
@@ -294,20 +297,20 @@ canvas#bg {
 .feature-card-new:nth-child(6):hover .card-icon-new { background: rgba(255,143,171,0.1); border-color: rgba(255,143,171,0.2); }
 
 .card-name-new {
-  font-size: 13px; color: rgba(255,255,255,0.3);
+  font-size: 13px; color: rgba(255,255,255,0.28);
   font-weight: 600; letter-spacing: 0.1px;
-  transition: all 0.3s; position: relative; z-index: 1;
+  transition: all 0.4s var(--ease-out); position: relative; z-index: 1;
 }
 
 .feature-card-new:hover .card-name-new { color: rgba(255,255,255,0.7); }
 
 .card-desc-new {
-  font-size: 11px; color: rgba(255,255,255,0.1);
+  font-size: 11px; color: rgba(255,255,255,0.08);
   font-weight: 400; line-height: 1.3;
-  transition: color 0.3s; position: relative; z-index: 1;
+  transition: color 0.4s var(--ease-out); position: relative; z-index: 1;
 }
 
-.feature-card-new:hover .card-desc-new { color: rgba(255,255,255,0.2); }
+.feature-card-new:hover .card-desc-new { color: rgba(255,255,255,0.22); }
 
 /* ══════════════════════════════════════════════
    Buttons
@@ -996,6 +999,32 @@ select.inp {
   padding: 2px 8px; border-radius: 4px; font-size: 12px;
 }
 
+/* Empty State Wrapper (for dashboard) */
+.empty-state-wrapper {
+  text-align: center; padding: 80px 24px;
+  animation: fadeSlideUp 0.5s var(--ease-out);
+}
+
+.empty-state-icon {
+  font-size: 56px; margin-bottom: 20px; opacity: 0.25;
+}
+
+.empty-state-wrapper h2 {
+  font-size: 20px; font-weight: 700; margin-bottom: 10px;
+  color: var(--text);
+}
+
+.empty-state-wrapper p {
+  color: var(--text-secondary); font-size: 14px;
+  max-width: 400px; margin: 0 auto; line-height: 1.6;
+}
+
+/* Staggered Card Animation */
+.stagger-card {
+  opacity: 0;
+  animation: cardIn 0.5s var(--ease-out) both;
+}
+
 /* ══════════════════════════════════════════════
    Members Tab
    ══════════════════════════════════════════════ */
@@ -1415,17 +1444,26 @@ select.inp {
 .guild-card {
   display: flex; align-items: center; gap: 18px;
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 22px;
+  border-radius: var(--radius-lg); padding: 24px;
   text-decoration: none; color: var(--text);
-  transition: all 0.35s var(--ease-out);
-  position: relative;
+  transition: all 0.4s var(--ease-out);
+  position: relative; overflow: hidden;
+}
+
+.guild-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 0% 0%, rgba(255,94,138,0.04), transparent 70%);
+  opacity: 0; transition: opacity 0.5s var(--ease-out);
+  pointer-events: none;
 }
 
 .guild-card:hover {
   border-color: var(--border-light);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.3);
 }
+
+.guild-card:hover::before { opacity: 1; }
 
 .guild-icon {
   width: 52px; height: 52px; flex-shrink: 0;
@@ -1447,11 +1485,12 @@ select.inp {
 .guild-info p { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
 
 .guild-arrow {
-  font-size: 18px; color: var(--pink); opacity: 0.4;
-  transition: all 0.3s ease;
+  font-size: 20px; color: var(--pink); opacity: 0.25;
+  transition: all 0.4s var(--ease-out);
+  font-weight: 300;
 }
 
-.guild-card:hover .guild-arrow { opacity: 1; transform: translateX(4px); }
+.guild-card:hover .guild-arrow { opacity: 1; transform: translateX(6px); }
 
 /* ══════════════════════════════════════════════
    Animations
@@ -1507,10 +1546,12 @@ select.inp {
 }
 
 /* Landing responsive */
-@media (max-width: 1000px) {
-  .landing-container { padding: 20px 32px 28px; }
-  .landing-hero { gap: 40px; }
-  .landing-hero-right { width: 340px; }
+@media (max-width: 1100px) {
+  .landing-container { padding: 20px 40px 28px; }
+  .landing-hero { gap: 50px; }
+  .landing-hero-right { width: 380px; margin-right: 0; }
+  .feature-card-new { padding: 18px; }
+  .card-icon-new { width: 36px; height: 36px; font-size: 17px; }
 }
 
 @media (max-width: 768px) {
@@ -1519,9 +1560,9 @@ select.inp {
   .landing-hero-left { align-items: center; text-align: center; }
   .landing-sub { max-width: 320px; }
   .landing-stats { justify-content: center; }
-  .landing-hero-right { width: 360px; }
-  .feature-card-new:nth-child(n+3) { margin-top: 0; }
+  .landing-hero-right { width: 100%; max-width: 400px; margin-right: 0; }
   .feature-card-new { padding: 16px; }
+  .feature-card-new { margin-top: 0 !important; }
   .card-icon-new { width: 34px; height: 34px; font-size: 16px; }
 }
 
