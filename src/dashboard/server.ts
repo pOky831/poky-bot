@@ -76,6 +76,28 @@ function ensureAuth(req: express.Request, res: express.Response, next: express.N
   res.redirect("/login");
 }
 
+// Public live stats API
+app.get("/api/stats", async (_req, res) => {
+  try {
+    const guildCount = botClient?.guilds.cache.size ?? 0;
+    let memberCount = 0;
+    if (botClient) {
+      for (const guild of botClient.guilds.cache.values()) {
+        memberCount += guild.memberCount;
+      }
+    }
+    const activeGiveaways = await stmts.getActiveGiveaways();
+    res.json({
+      guildCount,
+      memberCount,
+      commandCount: 7,
+      activeGiveaways: activeGiveaways.length,
+    });
+  } catch {
+    res.json({ guildCount: 0, memberCount: 0, commandCount: 7, activeGiveaways: 0 });
+  }
+});
+
 // Routes
 app.get("/", (req, res) => {
   res.render("index", { user: req.user as DiscordUser | undefined, clientId: process.env.CLIENT_ID });

@@ -40,7 +40,8 @@
     </div>
   </nav>
 
-  <div class="landing-hero">
+  <!-- ═══════════ HERO ═══════════ -->
+  <section class="landing-hero">
     <div class="landing-hero-left">
       <div class="badge badge-landing">
         <span class="badge-dot"></span>
@@ -80,11 +81,24 @@
         <% } %>
       </div>
 
-      <div class="landing-stats">
-        <div class="landing-stat"><strong>🛡️</strong> Automod</div>
-        <div class="landing-stat"><strong>🎫</strong> Tickets</div>
-        <div class="landing-stat"><strong>📈</strong> Leveling</div>
-        <div class="landing-stat"><strong>🎉</strong> Giveaways</div>
+      <!-- Live Stats Counter -->
+      <div class="live-stats">
+        <div class="live-stat">
+          <span class="live-stat-num"><span id="stat-guilds" data-target="0">0</span></span>
+          <span class="live-stat-label">Server</span>
+        </div>
+        <div class="live-stat">
+          <span class="live-stat-num"><span id="stat-members" data-target="0">0</span></span>
+          <span class="live-stat-label">Mitglieder</span>
+        </div>
+        <div class="live-stat">
+          <span class="live-stat-num"><span id="stat-giveaways" data-target="0">0</span></span>
+          <span class="live-stat-label">Giveaways</span>
+        </div>
+        <div class="live-stat">
+          <span class="live-stat-num"><span id="stat-commands" data-target="7">7</span></span>
+          <span class="live-stat-label">Commands</span>
+        </div>
       </div>
     </div>
 
@@ -128,9 +142,181 @@
         <span class="card-desc-new">Web configuration</span>
       </div>
     </div>
-  </div>
+  </section>
+
+  <!-- ═══════════ FUNKTIONEN ═══════════ -->
+  <section class="functions-section" id="functions">
+    <div class="functions-head">
+      <span class="functions-badge">Funktionen</span>
+      <h2 class="functions-title">Alles was dein Server braucht</h2>
+      <p class="functions-sub">Sechs mächtige Module — alle in einem Bot.</p>
+    </div>
+
+    <div class="functions-grid">
+      <div class="func-card">
+        <div class="func-card-accent"></div>
+        <div class="func-icon-wrap"><span class="func-icon">🛡️</span></div>
+        <div class="func-body">
+          <h3>Auto-Moderation</h3>
+          <p>Schütze deinen Server automatisch vor Spam, Links, Massen-Mentions und Bad Words — konfigurierbar in Echtzeit über das Dashboard.</p>
+          <div class="func-tags">
+            <span class="func-tag">Spam-Filter</span>
+            <span class="func-tag">Link-Blocker</span>
+            <span class="func-tag">Bad Words</span>
+            <span class="func-tag">Mention-Cap</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="func-card">
+        <div class="func-card-accent"></div>
+        <div class="func-icon-wrap"><span class="func-icon">⚠️</span></div>
+        <div class="func-body">
+          <h3>Warnsystem</h3>
+          <p>3-Strike-System mit automatischen Eskalationen: Verwarnung → Warn-Rolle → Timeout. Inklusive Mod-Log und interaktivem Member-Dashboard.</p>
+          <div class="func-tags">
+            <span class="func-tag">Warn-Rollen</span>
+            <span class="func-tag">Auto-Timeout</span>
+            <span class="func-tag">Mod-Log</span>
+            <span class="func-tag">Notizen</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="func-card">
+        <div class="func-card-accent"></div>
+        <div class="func-icon-wrap"><span class="func-icon">🎫</span></div>
+        <div class="func-body">
+          <h3>Ticket-System</h3>
+          <p>Professionelles Support-Ticket-System mit Select-Menü-Panel, Support-Rollen, Chat-Verlauf im Dashboard und mehreren Kategorien.</p>
+          <div class="func-tags">
+            <span class="func-tag">Select-Menü</span>
+            <span class="func-tag">Support-Rollen</span>
+            <span class="func-tag">Chat-Verlauf</span>
+            <span class="func-tag">Mehrere Kategorien</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="func-card">
+        <div class="func-card-accent"></div>
+        <div class="func-icon-wrap"><span class="func-icon">⬆️</span></div>
+        <div class="func-body">
+          <h3>Level-System</h3>
+          <p>Belohne Aktivität mit XP und Level-Aufstiegen. Konfiguriere Level-Rollen, Leaderboards und einen eigenen Announcement-Channel.</p>
+          <div class="func-tags">
+            <span class="func-tag">XP-System</span>
+            <span class="func-tag">Level-Rollen</span>
+            <span class="func-tag">Leaderboard</span>
+            <span class="func-tag">Rank-Card</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="func-card">
+        <div class="func-card-accent"></div>
+        <div class="func-icon-wrap"><span class="func-icon">🎉</span></div>
+        <div class="func-body">
+          <h3>Giveaways</h3>
+          <p>Starte, verwalte und beende Giveaways direkt über Slash-Commands oder das Web-Dashboard — inklusive Reroll-Funktion und Entry-Tracking.</p>
+          <div class="func-tags">
+            <span class="func-tag">Slash-Commands</span>
+            <span class="func-tag">Reroll</span>
+            <span class="func-tag">Entry-Tracking</span>
+            <span class="func-tag">Dashboard-Sync</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="func-card">
+        <div class="func-card-accent"></div>
+        <div class="func-icon-wrap"><span class="func-icon">🌐</span></div>
+        <div class="func-body">
+          <h3>Web-Dashboard</h3>
+          <p>Konfiguriere alle Features über ein elegantes, responsives Web-Dashboard mit Discord-Login, Echtzeit-Statistiken und Member-Management.</p>
+          <div class="func-tags">
+            <span class="func-tag">Discord OAuth2</span>
+            <span class="func-tag">Live-Stats</span>
+            <span class="func-tag">Member-View</span>
+            <span class="func-tag">Responsive</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <div class="footer-left">
+      <div class="logo" style="margin-bottom:8px">
+        <div class="logo-wrap" style="width:24px;height:24px">
+          <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:12px;height:12px">
+            <circle cx="50" cy="52" r="42" fill="#FFB7C5"/>
+            <circle cx="34" cy="44" r="7" fill="#111"/>
+            <circle cx="66" cy="44" r="7" fill="#111"/>
+          </svg>
+        </div>
+        <span class="logo-text" style="font-size:14px">pOky</span>
+      </div>
+      <p class="footer-copy">© 2025 pOky Bot. Alle Rechte vorbehalten.</p>
+    </div>
+    <div class="footer-links">
+      <a href="https://discord.com/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands" target="_blank">Einladen</a>
+      <% if (user) { %>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/logout">Abmelden</a>
+      <% } else { %>
+        <a href="/login">Anmelden</a>
+      <% } %>
+    </div>
+  </footer>
 </div>
 
 <script src="/js/animated-bg.js"></script>
+<script>
+// ── Live Stats Fetcher ──
+async function fetchStats() {
+  try {
+    const r = await fetch('/api/stats');
+    const d = await r.json();
+    animateCounter('stat-guilds', d.guildCount);
+    animateCounter('stat-members', d.memberCount);
+    animateCounter('stat-giveaways', d.activeGiveaways);
+    animateCounter('stat-commands', d.commandCount);
+  } catch(e) { /* keep defaults */ }
+}
+
+function animateCounter(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const start = parseInt(el.textContent) || 0;
+  if (start === target) return;
+  const duration = 1200;
+  const startTime = performance.now();
+  function step(ts) {
+    const progress = Math.min((ts - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(start + (target - start) * eased);
+    el.textContent = current.toLocaleString('de-DE');
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// Fetch on load and every 30s
+fetchStats();
+setInterval(fetchStats, 30000);
+
+// ── Scroll reveal for functions section ──
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.func-card').forEach(c => observer.observe(c));
+</script>
 </body>
 </html>
