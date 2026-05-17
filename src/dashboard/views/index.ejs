@@ -1,90 +1,130 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>pOky Dashboard</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pOky Bot — Dein Allround Discord Bot</title>
+<meta name="description" content="Moderation, Tickets, Leveling & Giveaways — pOky ist der All-in-One Discord Bot für deine Community.">
+<link rel="stylesheet" href="/css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
-<body>
-  <!-- Theme Switcher -->
-  <div class="theme-switcher">
-    <div class="theme-dot theme-dot-pink active" data-theme="pink" title="Pink Theme"></div>
-    <div class="theme-dot theme-dot-dark" data-theme="dark" title="Dark Theme"></div>
-    <div class="theme-dot theme-dot-orange" data-theme="orange" title="Orange Theme"></div>
-  </div>
-  <div class="hero">
-    <canvas id="animated-bg"></canvas>
-    <div class="floating-shapes">
-      <div class="float-circle"></div>
-      <div class="float-circle"></div>
-      <div class="float-circle"></div>
-      <div class="float-circle"></div>
-      <div class="float-circle"></div>
-      <div class="float-circle"></div>
-      <div class="particle-dot"></div>
-      <div class="particle-dot"></div>
-      <div class="particle-dot"></div>
-      <div class="particle-dot"></div>
-      <div class="particle-dot"></div>
-    </div>
-    <nav class="navbar">
-      <div class="logo">
-        <svg class="logo-icon" width="34" height="34" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="50" cy="54" rx="44" ry="42" fill="#f799b9"/>
-          <ellipse cx="34" cy="46" rx="6" ry="12" fill="#2d1f2c"/>
-          <ellipse cx="32" cy="42" rx="2.5" ry="5" fill="white"/>
-          <ellipse cx="66" cy="46" rx="6" ry="12" fill="#2d1f2c"/>
-          <ellipse cx="64" cy="42" rx="2.5" ry="5" fill="white"/>
-          <path d="M42 61 Q50 67 58 61" stroke="#2d1f2c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-          <ellipse cx="26" cy="57" rx="7" ry="5" fill="#e0739d" opacity="0.6"/>
-          <ellipse cx="74" cy="57" rx="7" ry="5" fill="#e0739d" opacity="0.6"/>
-          <ellipse cx="34" cy="92" rx="13" ry="7" fill="#e0739d"/>
-          <ellipse cx="66" cy="92" rx="13" ry="7" fill="#e0739d"/>
-        </svg>
-        <span>pOky</span>
-      </div>
-      <div class="nav-links">
-        <% if (user) { %>
-          <a href="/dashboard" class="btn btn-secondary">Dashboard</a>
-          <a href="/logout" class="btn btn-outline">Abmelden</a>
-        <% } else { %>
-          <a href="https://discord.com/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-accent">➕ Bot einladen</a>
-          <a href="/login" class="btn btn-primary">🔐 Mit Discord anmelden</a>
-        <% } %>
-      </div>
-    </nav>
+<body class="landing-body">
 
-    <div class="hero-content">
-      <h1>Dein Discord pOky Bot</h1>
-      <p class="subtitle">Moderation, Tickets, Willkommensnachrichten und mehr — alles im Griff mit dem Web Dashboard.</p>
-      <div class="features">
-        <div class="feature-card">
-          <span class="feature-icon">🛡️</span>
-          <h3>Moderation</h3>
-          <p>Kick, Ban, Timeout, Warns und detaillierte Logs</p>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon">🎫</span>
-          <h3>Ticket System</h3>
-          <p>Einfaches Support-Ticket-Management</p>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon">📊</span>
-          <h3>Dashboard</h3>
-          <p>Alles im Blick: Stats, Logs und Einstellungen</p>
-        </div>
+<canvas id="bg"></canvas>
+<div class="bg-glow"></div>
+
+<div class="landing-container">
+  <nav class="landing-nav">
+    <div class="logo">
+      <div class="logo-wrap">
+        <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="52" r="42" fill="#FFB7C5"/>
+          <circle cx="34" cy="44" r="7" fill="#111"/>
+          <circle cx="66" cy="44" r="7" fill="#111"/>
+          <circle cx="32" cy="42" r="2.5" fill="#fff"/>
+          <circle cx="64" cy="42" r="2.5" fill="#fff"/>
+          <path d="M44 63 Q50 69 56 63" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.35"/>
+          <ellipse cx="34" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+          <ellipse cx="66" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+        </svg>
       </div>
-      <% if (!user) { %>
-        <div class="hero-cta">
-          <a href="/login" class="btn btn-large btn-primary">🚀 Jetzt anmelden</a>
-          <a href="https://discord.com/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-large btn-accent">➕ Bot einladen</a>
-        </div>
+      <span class="logo-text">pOky</span>
+    </div>
+    <div class="landing-nav-links">
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#" class="nav-link">Status</a>
+      <% if (user) { %>
+        <a href="/dashboard" class="btn btn-primary">Dashboard</a>
+        <a href="/logout" class="btn btn-outline">Abmelden</a>
+      <% } else { %>
+        <a href="/login" class="btn btn-primary">Sign in</a>
       <% } %>
     </div>
+  </nav>
+
+  <div class="landing-hero" id="features">
+    <div class="landing-hero-left">
+      <div class="badge badge-landing">
+        <span class="badge-dot"></span>
+        <span class="badge-text">Online &middot; Bereit für deinen Server</span>
+      </div>
+
+      <h1 class="landing-title">
+        P<svg class="kirby-o" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="52" r="42" fill="#FFB7C5"/>
+          <circle cx="34" cy="44" r="7" fill="#111"/>
+          <circle cx="66" cy="44" r="7" fill="#111"/>
+          <circle cx="32" cy="42" r="2.5" fill="#fff"/>
+          <circle cx="64" cy="42" r="2.5" fill="#fff"/>
+          <path d="M44 63 Q50 69 56 63" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.35"/>
+          <ellipse cx="34" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+          <ellipse cx="66" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+        </svg>ky <span class="grad">Bot</span>
+      </h1>
+
+      <p class="landing-sub">
+        Der All-in-One Discord Bot für deine Community — mit smartem Auto-Mod, flexiblem Ticket-System, Leveling, Giveaways und einem eleganten Web-Dashboard.
+      </p>
+
+      <div class="landing-actions">
+        <% if (user) { %>
+          <a href="/dashboard" class="btn btn-primary btn-large">Zum Dashboard</a>
+          <a href="/logout" class="btn btn-outline btn-large">Abmelden</a>
+        <% } else { %>
+          <a href="https://discord.com/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-primary btn-large">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+            Add to Discord
+          </a>
+          <a href="/login" class="btn btn-outline btn-large">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Mit Discord anmelden
+          </a>
+        <% } %>
+      </div>
+
+      <div class="landing-stats">
+        <div class="landing-stat"><strong>🛡️</strong> Automod</div>
+        <div class="landing-stat"><strong>🎫</strong> Tickets</div>
+        <div class="landing-stat"><strong>📈</strong> Leveling</div>
+        <div class="landing-stat"><strong>🎉</strong> Giveaways</div>
+      </div>
+    </div>
+
+    <div class="landing-hero-right">
+      <div class="feature-card-new">
+        <div class="card-icon-new">🛡️</div>
+        <span class="card-name-new">Automod</span>
+        <span class="card-desc-new">Smart content filtering</span>
+      </div>
+      <div class="feature-card-new">
+        <div class="card-icon-new">⚠️</div>
+        <span class="card-name-new">Warnsystem</span>
+        <span class="card-desc-new">Strike-based moderation</span>
+      </div>
+      <div class="feature-card-new">
+        <div class="card-icon-new">🎫</div>
+        <span class="card-name-new">Tickets</span>
+        <span class="card-desc-new">Support &amp; claims</span>
+      </div>
+      <div class="feature-card-new">
+        <div class="card-icon-new">⬆️</div>
+        <span class="card-name-new">Leveling</span>
+        <span class="card-desc-new">XP &amp; leaderboards</span>
+      </div>
+      <div class="feature-card-new">
+        <div class="card-icon-new">🎉</div>
+        <span class="card-name-new">Giveaways</span>
+        <span class="card-desc-new">Automated prize draws</span>
+      </div>
+      <div class="feature-card-new">
+        <div class="card-icon-new">📊</div>
+        <span class="card-name-new">Dashboard</span>
+        <span class="card-desc-new">Web configuration</span>
+      </div>
+    </div>
   </div>
-  <script src="/js/animated-bg.js"></script>
-  <script src="/js/theme.js"></script>
+</div>
+
+<script src="/js/animated-bg.js"></script>
 </body>
 </html>

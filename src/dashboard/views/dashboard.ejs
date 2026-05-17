@@ -1,87 +1,207 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard | pOky</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard | pOky</title>
+<link rel="stylesheet" href="/css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body class="dashboard-body">
-  <!-- Theme Switcher -->
-  <div class="theme-switcher">
-    <div class="theme-dot theme-dot-pink active" data-theme="pink" title="Pink Theme"></div>
-    <div class="theme-dot theme-dot-dark" data-theme="dark" title="Dark Theme"></div>
-    <div class="theme-dot theme-dot-orange" data-theme="orange" title="Orange Theme"></div>
-  </div>
-  <canvas id="animated-bg"></canvas>
-  <div class="floating-shapes">
-    <div class="float-circle"></div>
-    <div class="float-circle"></div>
-    <div class="float-circle"></div>
-    <div class="float-circle"></div>
-    <div class="float-circle"></div>
-    <div class="float-circle"></div>
-    <div class="particle-dot"></div>
-    <div class="particle-dot"></div>
-    <div class="particle-dot"></div>
-    <div class="particle-dot"></div>
-    <div class="particle-dot"></div>
-  </div>
-  <nav class="sidebar">
-    <div class="sidebar-header">
-      <svg class="logo-icon" width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="50" cy="54" rx="44" ry="42" fill="#f799b9"/>
-        <ellipse cx="34" cy="46" rx="6" ry="12" fill="#2d1f2c"/>
-        <ellipse cx="32" cy="42" rx="2.5" ry="5" fill="white"/>
-        <ellipse cx="66" cy="46" rx="6" ry="12" fill="#2d1f2c"/>
-        <ellipse cx="64" cy="42" rx="2.5" ry="5" fill="white"/>
-        <path d="M42 61 Q50 67 58 61" stroke="#2d1f2c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-        <ellipse cx="26" cy="57" rx="7" ry="5" fill="#e0739d" opacity="0.6"/>
-        <ellipse cx="74" cy="57" rx="7" ry="5" fill="#e0739d" opacity="0.6"/>
-        <ellipse cx="34" cy="92" rx="13" ry="7" fill="#e0739d"/>
-        <ellipse cx="66" cy="92" rx="13" ry="7" fill="#e0739d"/>
+
+<canvas id="bg"></canvas>
+
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <div class="logo-wrap">
+      <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="52" r="42" fill="#FFB7C5"/>
+        <circle cx="34" cy="44" r="7" fill="#111"/>
+        <circle cx="66" cy="44" r="7" fill="#111"/>
+        <circle cx="32" cy="42" r="2.5" fill="#fff"/>
+        <circle cx="64" cy="42" r="2.5" fill="#fff"/>
+        <path d="M44 63 Q50 69 56 63" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.35"/>
+        <ellipse cx="34" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+        <ellipse cx="66" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
       </svg>
-      <span>pOky</span>
     </div>
-    <div class="user-info">
-      <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=64" 
-           alt="Avatar" class="user-avatar" 
-           onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-      <span class="user-name"><%= user.username %></span>
-    </div>
-    <div class="sidebar-links">
-      <a href="/dashboard" class="active">Server Übersicht</a>
-      <a href="/logout">Abmelden</a>
-    </div>
-  </nav>
+    <span class="logo-text">pOky</span>
+  </div>
 
-  <main class="main-content">
-    <header class="page-header">
-      <h1>Wähle einen Server</h1>
-      <p>Server, auf denen du Admin-Rechte hast</p>
-    </header>
-
-    <div class="guild-grid">
-      <% guilds.forEach(guild => { %>
-        <a href="/dashboard/guild/<%= guild.id %>" class="guild-card">
-          <div class="guild-icon">
-            <% if (guild.icon) { %>
-              <img src="<%= guild.icon %>" alt="<%= guild.name %>">
-            <% } else { %>
-              <div class="guild-icon-placeholder"><%= guild.name.charAt(0) %></div>
-            <% } %>
-          </div>
-          <div class="guild-info">
-            <h3><%= guild.name %></h3>
-            <p><%= guild.memberCount ? guild.memberCount + ' Mitglieder' : 'Mitglieder unbekannt' %></p>
-          </div>
-          <span class="guild-arrow">→</span>
-        </a>
-      <% }) %>
+  <div class="sidebar-user">
+    <div style="position:relative">
+      <% if (user.avatar) { %>
+        <div class="u-avatar"><img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=64" alt="Avatar" onerror="this.parentElement.textContent='<%= user.username.charAt(0).toUpperCase() %>'"></div>
+      <% } else { %>
+        <div class="u-avatar"><%= user.username.charAt(0).toUpperCase() %></div>
+      <% } %>
+      <div class="u-status"></div>
     </div>
-  </main>
-  <script src="/js/animated-bg.js"></script>
-  <script src="/js/theme.js"></script>
+    <div class="u-info">
+      <div class="u-name"><%= user.username %></div>
+      <div class="u-tag"><%= user.id %></div>
+    </div>
+  </div>
+
+  <div class="sidebar-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input class="sbar" placeholder="Server suchen..." id="sidebar-search-input" oninput="filterGuilds()">
+  </div>
+
+  <div class="sidebar-list" id="sidebar-list">
+    <% guilds.forEach(function(g, i) { %>
+      <a href="/dashboard/guild/<%= g.id %>" class="server-row" data-search="<%= g.name.toLowerCase() %>" style="animation:slideInLeft 0.4s var(--ease-out) <%= 0.08 + i*0.04 %>s both;text-decoration:none">
+        <div class="s-indicator"></div>
+        <div class="s-icon" style="overflow:hidden">
+          <% if (g.icon) { %>
+            <img src="<%= g.icon %>?size=64" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
+          <% } else { %>
+            <%= g.name.charAt(0).toUpperCase() %>
+          <% } %>
+        </div>
+        <div class="s-row-info">
+          <div class="s-row-name"><%= g.name %></div>
+          <div class="s-row-meta"><%= g.memberCount ? g.memberCount.toLocaleString() : '?' %> Mitglieder</div>
+        </div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;opacity:0;transition:all 0.3s var(--ease-out);color:var(--pink-light);flex-shrink:0;transform:translateX(-4px)"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+    <% }) %>
+  </div>
+
+  <div class="sidebar-footer-links">
+    <a href="/" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-secondary)'">← Zurück zur Startseite</a>
+    <a href="/logout" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-secondary)'">Abmelden</a>
+  </div>
+</aside>
+
+<main class="main-content">
+  <div class="dashboard-hero">
+    <div class="hero-art">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:50px;height:50px">
+        <circle cx="50" cy="52" r="42" fill="#FFB7C5"/>
+        <circle cx="34" cy="44" r="7" fill="#111"/>
+        <circle cx="66" cy="44" r="7" fill="#111"/>
+        <circle cx="32" cy="42" r="2.5" fill="#fff"/>
+        <circle cx="64" cy="42" r="2.5" fill="#fff"/>
+        <path d="M44 63 Q50 69 56 63" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.35"/>
+        <ellipse cx="34" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+        <ellipse cx="66" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+      </svg>
+    </div>
+    <div class="hero-meta">
+      <h1>Willkommen, <%= user.username %></h1>
+      <p>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;opacity:0.4"><path d="M3 21v-4a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v4"/><circle cx="12" cy="7" r="4"/></svg>
+        Wähle einen Server aus, den du verwalten möchtest
+      </p>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <% if (guilds.length === 0) { %>
+      <div class="empty" style="padding:64px 24px">
+        <div style="font-size:48px;margin-bottom:16px;opacity:0.3">🔒</div>
+        <h2 style="font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text)">Keine Server gefunden</h2>
+        <p>Du hast auf keinem Server Admin-Rechte. Lade den Bot auf einen Server ein, um loszulegen.</p>
+        <% if (typeof clientId !== 'undefined') { %>
+          <a href="https://discord.com/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-primary" style="margin-top:20px">Bot einladen</a>
+        <% } %>
+      </div>
+    <% } else { %>
+      <div class="content-inner">
+        <% var totalMembers = guilds.reduce(function(sum, g) { return sum + (g.memberCount || 0); }, 0); %>
+        <div class="stats-bar stagger" style="margin-bottom:24px">
+          <div class="stat-item">
+            <h3><span class="stat-counter" data-val="<%= guilds.length %>">0</span></h3>
+            <p>Verwaltbare Server</p>
+          </div>
+          <div class="stat-item">
+            <h3><span class="stat-counter" data-val="<%= totalMembers %>">0</span></h3>
+            <p>Erreichte Mitglieder</p>
+          </div>
+          <div class="stat-item">
+            <h3 style="background:linear-gradient(135deg,#fff,var(--pink-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent">pOky</h3>
+            <p>Version 2.0</p>
+          </div>
+          <div class="stat-item">
+            <h3 class="stat-counter" data-val="7">0</h3>
+            <p>Feature-Module</p>
+          </div>
+        </div>
+
+        <div class="guild-grid" id="guild-grid">
+          <% guilds.forEach(function(g) { %>
+            <a href="/dashboard/guild/<%= g.id %>" class="guild-card" data-search="<%= g.name.toLowerCase() %>">
+              <div class="guild-icon">
+                <% if (g.icon) { %>
+                  <img src="<%= g.icon %>?size=128" alt="<%= g.name %>">
+                <% } else { %>
+                  <div class="guild-icon-placeholder"><%= g.name.charAt(0).toUpperCase() %></div>
+                <% } %>
+              </div>
+              <div class="guild-info">
+                <h3><%= g.name %></h3>
+                <p><%= g.memberCount ? g.memberCount.toLocaleString() + ' Mitglieder' : 'Mitglieder unbekannt' %></p>
+              </div>
+              <span class="guild-arrow">→</span>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<script src="/js/animated-bg.js"></script>
+<script>
+function filterGuilds() {
+  var query = (document.getElementById('sidebar-search-input').value || '').toLowerCase();
+  var guildCards = document.querySelectorAll('.guild-card');
+  var sidebarRows = document.querySelectorAll('.server-row');
+
+  guildCards.forEach(function(card) {
+    var name = card.getAttribute('data-search') || '';
+    card.style.display = name.indexOf(query) !== -1 ? '' : 'none';
+  });
+
+  sidebarRows.forEach(function(row) {
+    var name = row.getAttribute('data-search') || '';
+    row.style.display = name.indexOf(query) !== -1 ? '' : 'none';
+  });
+}
+
+// Hover effect: show arrow on sidebar row hover
+document.querySelectorAll('.server-row').forEach(function(row) {
+  row.addEventListener('mouseenter', function() {
+    var arrow = this.querySelector('svg');
+    if (arrow) { arrow.style.opacity = '1'; arrow.style.transform = 'translateX(0)'; }
+  });
+  row.addEventListener('mouseleave', function() {
+    var arrow = this.querySelector('svg');
+    if (arrow) { arrow.style.opacity = '0'; arrow.style.transform = 'translateX(-4px)'; }
+  });
+});
+
+// Animate stat counters
+function animateValue(el, start, end, duration) {
+  if (!el) return;
+  var range = end - start, startTime = performance.now();
+  function tick(now) {
+    var p = Math.min((now - startTime) / duration, 1);
+    var ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.floor(start + range * ease).toLocaleString();
+    if (p < 1) requestAnimationFrame(tick);
+    else el.textContent = end.toLocaleString();
+  }
+  requestAnimationFrame(tick);
+}
+
+requestAnimationFrame(function() {
+  document.querySelectorAll('.stat-counter').forEach(function(el) {
+    var val = parseInt(el.getAttribute('data-val')) || 0;
+    animateValue(el, 0, val, 1000);
+  });
+});
+</script>
 </body>
 </html>

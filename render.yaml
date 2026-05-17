@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: poky-bot
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      # Von Render automatisch gesetzt
+      # PORT wird von Render injiziert – der Bot nutzt ihn fürs Dashboard
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: CLIENT_ID
+        sync: false
+      - key: CLIENT_SECRET
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DASHBOARD_CALLBACK_URL
+        sync: false

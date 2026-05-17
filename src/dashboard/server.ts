@@ -117,7 +117,7 @@ app.get("/dashboard", ensureAuth, async (req, res) => {
     })
   );
 
-  res.render("dashboard", { user, guilds });
+  res.render("dashboard", { user, guilds, clientId: process.env.CLIENT_ID });
 });
 
 app.get("/dashboard/guild/:id", ensureAuth, async (req, res) => {
