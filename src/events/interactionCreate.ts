@@ -8,6 +8,9 @@ import {
   PermissionFlagsBits,
   OverwriteType,
   TextChannel,
+  ButtonBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
 } from "discord.js";
 import { commands } from "../bot.js";
 import { handleGiveawayButton } from "../commands/giveaway.js";
@@ -46,6 +49,20 @@ export async function handleInteractionCreate(interaction: Interaction): Promise
         }
       }
     }
+
+    if (interaction.customId.startsWith("ticket_close_")) {
+      try {
+        await handleTicketCloseButton(interaction);
+      } catch (error) {
+        console.error("❌ Fehler bei Ticket-Close-Button:", error);
+        const reply = { content: "Ein Fehler ist aufgetreten.", flags: MessageFlags.Ephemeral as number };
+        if (interaction.replied || interaction.deferred) {
+          await interaction.editReply(reply);
+        } else {
+          await interaction.reply(reply);
+        }
+      }
+    }
     return;
   }
 
@@ -65,6 +82,36 @@ export async function handleInteractionCreate(interaction: Interaction): Promise
     }
     return;
   }
+}
+
+async function handleTicketCloseButton(interaction: ButtonInteraction): Promise<void> {
+  const channelId = interaction.customId.replace("ticket_close_", "");
+  const channel = interaction.channel as TextChannel | null;
+
+  if (!channel || channel.id !== channelId) {
+    await interaction.reply({ content: "Dieser Button gehört nicht zu diesem Kanal.", ephemeral: true });
+    return;
+  }
+
+  const ticket = await stmts.getTicketByChannel(channelId);
+  if (!ticket) {
+    await interaction.reply({ content: "Dies ist kein Ticket-Kanal.", ephemeral: true });
+    return;
+  }
+
+  if (ticket.status === "closed") {
+    await interaction.reply({ content: "Dieses Ticket ist bereits geschlossen.", ephemeral: true });
+    return;
+  }
+
+  await stmts.closeTicket(interaction.user.id, interaction.user.tag, "Per Button geschlossen", channelId);
+
+  await interaction.reply({ content: "🔒 Ticket wird gelöscht...", ephemeral: true });
+
+  // Delete the channel after a short delay (NOT logged to ticket_log_channel)
+  setTimeout(() => {
+    channel?.delete().catch(() => {});
+  }, 3000);
 }
 
 async function handleTicketSelect(interaction: StringSelectMenuInteraction): Promise<void> {
@@ -139,6 +186,14 @@ async function handleTicketSelect(interaction: StringSelectMenuInteraction): Pro
 
   await ticketChannel.send({
     content: `Hallo <@${interaction.user.id}>!\nEin Team-Mitglied wird sich gleich um dich kümmern.\n**Grund:** ${selectedOption}`,
+    components: [
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`ticket_close_${ticketChannel.id}`)
+          .setLabel("🔒 Ticket schließen")
+          .setStyle(ButtonStyle.Danger)
+      ),
+    ],
   });
 
   await interaction.editReply(`Ticket erstellt: <#${ticketChannel.id}>`);

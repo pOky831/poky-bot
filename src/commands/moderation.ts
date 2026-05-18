@@ -66,6 +66,15 @@ export const data = new SlashCommandBuilder()
   )
   .addSubcommand((sub) =>
     sub
+      .setName("removewarn")
+      .setDescription("Eine einzelne Verwarnung entfernen")
+      .addUserOption((opt) => opt.setName("nutzer").setDescription("Der Nutzer").setRequired(true))
+      .addIntegerOption((opt) =>
+        opt.setName("id").setDescription("Die ID der Verwarnung (aus /moderation warns)").setRequired(true).setMinValue(1)
+      )
+  )
+  .addSubcommand((sub) =>
+    sub
       .setName("logs")
       .setDescription("Moderations-Logs anzeigen")
       .addUserOption((opt) => opt.setName("nutzer").setDescription("Logs für einen bestimmten Nutzer filtern"))
@@ -192,9 +201,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     const list = warns
-      .map((w, i) => `${i + 1}. ${w.reason ?? "Kein Grund"} — <t:${w.created_at}:R>`)
+      .map((w, i) => `${i + 1}. [#${w.id}] ${w.reason ?? "Kein Grund"} — <t:${w.created_at}:R>`)
       .join("\n");
-    await interaction.editReply(`Verwarnungen für **${user.tag}** (${warns.length}):\n${list}`);
+    await interaction.editReply(`Verwarnungen für **${user.tag}** (${warns.length}):\n${list}\nNutze \`/moderation removewarn\` mit der \`[#ID]\` um eine Warnung zu löschen.`);
     return;
   }
 
@@ -203,6 +212,20 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const count = (await stmts.getWarns(interaction.guild.id, user.id)).length;
     await stmts.clearWarns(interaction.guild.id, user.id);
     await interaction.editReply(`✅ Alle Verwarnungen für **${user.tag}** gelöscht (${count} Stück).`);
+    return;
+  }
+
+  if (subcommand === "removewarn") {
+    const user = interaction.options.getUser("nutzer", true);
+    const warnId = interaction.options.getInteger("id", true);
+
+    const deleted = await stmts.removeWarn(warnId, interaction.guild.id);
+    if (!deleted) {
+      await interaction.editReply(`❌ Verwarnung mit ID **${warnId}** nicht gefunden (gehört sie zu **${user.tag}**?).\nTipp: Nutze \`/moderation warns\` um die IDs zu sehen.`);
+      return;
+    }
+
+    await interaction.editReply(`🗑️ Verwarnung **#${warnId}** von **${user.tag}** wurde entfernt.`);
     return;
   }
 

@@ -5,6 +5,9 @@ import {
   ChannelType,
   TextChannel,
   OverwriteType,
+  ButtonBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
 } from "discord.js";
 import { stmts } from "../database/db.js";
 
@@ -102,8 +105,16 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     await stmts.insertTicket(interaction.guild.id, ticketChannel.id, interaction.user.id, interaction.user.tag, reason);
 
+    const closeButton = new ButtonBuilder()
+      .setCustomId(`ticket_close_${ticketChannel.id}`)
+      .setLabel("🔒 Ticket schließen")
+      .setStyle(ButtonStyle.Danger);
+
+    const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(closeButton);
+
     await ticketChannel.send({
       content: `Hallo <@${interaction.user.id}>!\nEin Team-Mitglied wird sich gleich um dich kümmern.\n**Grund:** ${reason}`,
+      components: [buttonRow],
     });
 
     await interaction.editReply(`Ticket erstellt: <#${ticketChannel.id}>`);
@@ -141,8 +152,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const closeReason = interaction.options.getString("grund") ?? "Kein Grund angegeben";
     await stmts.closeTicket(interaction.user.id, interaction.user.tag, closeReason, channel.id);
 
-    await interaction.reply({ content: `Ticket wird geschlossen... Grund: ${closeReason}` });
-
+    // Log to ticket_log_channel (only for command-based close)
     const settings = await stmts.getGuildSettings(interaction.guild.id);
     if (settings?.ticket_log_channel_id) {
       const logChannel = interaction.guild.channels.cache.get(settings.ticket_log_channel_id) as TextChannel | undefined;
@@ -153,24 +163,12 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       }
     }
 
-    // Archive: rename and lock
-    await channel.edit({
-      name: `closed-${channel.name.replace(/^ticket-/, "")}`,
-      permissionOverwrites: [
-        {
-          id: interaction.guild.id,
-          type: OverwriteType.Role,
-          deny: [PermissionFlagsBits.ViewChannel],
-        },
-        {
-          id: interaction.client.user.id,
-          type: OverwriteType.Member,
-          allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageChannels],
-        },
-      ],
-    });
+    await interaction.reply({ content: `Ticket wird gelöscht... Grund: ${closeReason}`, ephemeral: true });
 
-    await channel.send("Dieses Ticket wurde geschlossen.");
+    // Delete the channel after a short delay
+    setTimeout(() => {
+      channel?.delete().catch(() => {});
+    }, 3000);
     return;
   }
 

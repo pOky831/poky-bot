@@ -473,6 +473,14 @@ export const stmts = {
     });
   },
 
+  async removeWarn(warnId: number, guildId: string): Promise<boolean> {
+    const result = await client.execute({
+      sql: "DELETE FROM warns WHERE id = ? AND guild_id = ?",
+      args: [warnId, guildId],
+    });
+    return result.rowsAffected > 0;
+  },
+
   // ── Member Notes ──
 
   async getMemberNotes(guildId: string, userId: string): Promise<MemberNote[]> {

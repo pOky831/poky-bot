@@ -822,8 +822,10 @@ function renderMemberDetail(m) {
   if (m.warns && m.warns.length > 0) {
     var hw = '<div class="mini-table">';
     m.warns.forEach(function(w) {
-      hw += '<div class="mini-table-row"><span class="mini-table-reason">' + (w.reason ? escapeHtml(w.reason) : 'Kein Grund') + '</span>' +
-        '<span class="mini-table-meta">von ' + escapeHtml(w.moderator_tag || w.moderator_id) + ' · ' + w.created_at_formatted + '</span></div>';
+      hw += '<div class="mini-table-row note-row">' +
+        '<div class="note-content"><span class="note-text">#' + w.id + ' – ' + (w.reason ? escapeHtml(w.reason) : 'Kein Grund') + '</span>' +
+        '<span class="mini-table-meta">von ' + escapeHtml(w.moderator_tag || w.moderator_id) + ' · ' + w.created_at_formatted + '</span></div>' +
+        '<div class="note-actions"><button class="btn btn-sm btn-danger" onclick="removeWarn(' + w.id + ')" title="Verwarnung löschen">🗑️</button></div></div>';
     });
     hw += '</div>';
     warnsList.innerHTML = hw;
@@ -1002,6 +1004,16 @@ function deleteNote(noteId) {
   if (!selectedMemberId) return;
   if (!confirm('Diese Notiz wirklich löschen?')) return;
   fetch('/api/guild/' + guildId + '/members/' + selectedMemberId + '/notes/' + noteId, { method: 'DELETE' })
+    .then(function(r) { return r.json(); }).then(function(data) {
+      if (data.success) showMemberDetail(selectedMemberId);
+      else alert('Fehler: ' + (data.error || 'Unbekannter Fehler'));
+    });
+}
+
+function removeWarn(warnId) {
+  if (!selectedMemberId) return;
+  if (!confirm('Diese Verwarnung wirklich löschen?')) return;
+  fetch('/api/guild/' + guildId + '/members/' + selectedMemberId + '/warns/' + warnId, { method: 'DELETE' })
     .then(function(r) { return r.json(); }).then(function(data) {
       if (data.success) showMemberDetail(selectedMemberId);
       else alert('Fehler: ' + (data.error || 'Unbekannter Fehler'));

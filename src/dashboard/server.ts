@@ -611,6 +611,21 @@ async function removeAllWarnRoles(member: import("discord.js").GuildMember): Pro
   }
 }
 
+// API: Remove individual warn
+app.delete("/api/guild/:id/members/:userId/warns/:warnId", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId) return;
+
+  const warnId = parseInt(Array.isArray(req.params.warnId) ? req.params.warnId[0] : req.params.warnId, 10);
+  if (isNaN(warnId)) return res.status(400).json({ error: "Ungültige Warn-ID." });
+
+  const deleted = await stmts.removeWarn(warnId, guildId);
+  if (!deleted) return res.status(404).json({ error: "Warn nicht gefunden." });
+
+  res.json({ success: true });
+});
+
 // API: Warn a member from dashboard
 app.post("/api/guild/:id/members/:userId/warn", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
