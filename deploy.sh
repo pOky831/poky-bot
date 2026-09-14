@@ -7,13 +7,13 @@ echo "=========================="
 # ── 1. System-Updates ──
 echo ""
 echo "📦 System-Updates..."
-sudo apt update -y && sudo apt upgrade -y
+apt update -y && apt upgrade -y
 
 # ── 2. Node.js installieren (falls nicht vorhanden) ──
 if ! command -v node &> /dev/null; then
   echo "📦 Node.js installieren..."
-  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-  sudo apt install -y nodejs
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  apt install -y nodejs
 fi
 echo "✅ Node.js: $(node -v)"
 echo "✅ npm: $(npm -v)"
@@ -21,13 +21,13 @@ echo "✅ npm: $(npm -v)"
 # ── 3. Git installieren (falls nicht vorhanden) ──
 if ! command -v git &> /dev/null; then
   echo "📦 Git installieren..."
-  sudo apt install -y git
+  apt install -y git
 fi
 
 # ── 4. PM2 installieren (falls nicht vorhanden) ──
 if ! command -v pm2 &> /dev/null; then
   echo "📦 PM2 installieren..."
-  sudo npm install -g pm2
+  npm install -g pm2
 fi
 echo "✅ PM2: $(pm2 -v)"
 
