@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funktionen | pOky Bot</title>
+<meta name="description" content="Alle Funktionen von pOky — Auto-Mod, Warnsystem, Tickets, Leveling, Giveaways, Musik und Web-Dashboard.">
+<link rel="stylesheet" href="/css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="landing-body">
+
+<canvas id="bg"></canvas>
+<div class="bg-glow"></div>
+
+<div class="landing-container g-page">
+
+  <!-- ═══════════ NAVBAR ═══════════ -->
+  <nav class="g-nav">
+    <a href="/" class="g-brand">
+      <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="52" r="42" fill="#FFB7C5"/>
+        <circle cx="34" cy="44" r="7" fill="#111"/>
+        <circle cx="66" cy="44" r="7" fill="#111"/>
+        <circle cx="32" cy="42" r="2.5" fill="#fff"/>
+        <circle cx="64" cy="42" r="2.5" fill="#fff"/>
+        <path d="M44 63 Q50 69 56 63" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.35"/>
+        <ellipse cx="34" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+        <ellipse cx="66" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+      </svg>
+      <span class="logo-text">pOky</span>
+    </a>
+    <div class="g-links">
+      <a href="/" class="g-link">Start</a>
+      <a href="/funktionen" class="g-link active">Funktionen</a>
+      <a href="mailto:poky-bot@web.de" class="g-link">Support</a>
+      <% if (user) { %>
+        <a href="/dashboard" class="g-link">Dashboard</a>
+      <% } %>
+    </div>
+    <div class="g-actions">
+      <% if (user) { %>
+        <a href="/dashboard" class="g-btn g-btn-primary">Zum Dashboard</a>
+        <a href="/logout" class="g-btn g-btn-ghost">Abmelden</a>
+      <% } else { %>
+        <a href="/login" class="g-btn g-btn-primary">Dashboard</a>
+      <% } %>
+    </div>
+  </nav>
+
+  <!-- ═══════════ HEAD ═══════════ -->
+  <header class="g-hero g-hero-features">
+    <h1 class="g-title">Hervorragende Funktionen<br>für deinen Server</h1>
+    <p class="g-sub">
+      Wir bieten dir eine breite Auswahl an Funktionen und Modulen für eine bessere
+      Erfahrung für dich und deine Nutzer.
+    </p>
+  </header>
+
+  <!-- ═══════════ FEATURE GRID ═══════════ -->
+  <section class="g-features">
+    <div class="g-feature-card">
+      <div class="g-feature-icon">🎫</div>
+      <h3>Tickets</h3>
+      <p>Professionelles Support-System mit Select-Menü-Panel, mehreren Kategorien, Support-Rollen und Chat-Verlauf direkt im Dashboard.</p>
+    </div>
+
+    <div class="g-feature-card">
+      <div class="g-feature-icon">🎧</div>
+      <h3>Support</h3>
+      <p>Fragen oder Probleme? Unser Team hilft dir schnell weiter — per E-Mail oder direkt im Discord-Support.</p>
+    </div>
+
+    <div class="g-feature-card">
+      <div class="g-feature-icon">👥</div>
+      <h3>Teamverwaltung</h3>
+      <p>Mod-Logs, Mitglieder-Verwaltung mit Notizen, Warn-Verlauf und Timeouts — dein ganzes Mod-Team im Blick.</p>
+    </div>
+
+    <div class="g-feature-card">
+      <div class="g-feature-icon">⚠️</div>
+      <h3>Warnsystem</h3>
+      <p>3-Strike-System mit automatischen Eskalationen: Verwarnung, Warn-Rollen und Auto-Timeout nach der vierten Verwarnung.</p>
+    </div>
+
+    <div class="g-feature-card">
+      <div class="g-feature-icon">🛡️</div>
+      <h3>Auto-Mod</h3>
+      <p>Schütze deinen Server automatisch vor Spam, Links, Massen-Mentions und Bad Words — live konfigurierbar im Dashboard.</p>
+    </div>
+
+    <div class="g-feature-card">
+      <div class="g-feature-icon">👋</div>
+      <h3>Willkommen</h3>
+      <p>Begrüße neue Mitglieder automatisch in einem Kanal deiner Wahl — inklusive schönem Embed und Server-Infos.</p>
+    </div>
+
+    <div class="g-feature-card">
+      <div class="g-feature-icon">⬆️</div>
+      <h3>Level-System</h3>
+      <p>Belohne Aktivität mit XP und Level-Aufstiegen. Eigene Level-Rollen und ein Ankündigungs-Kanal lassen sich frei konfigurieren.</p>
+    </div>
+
+    <div class="g-feature-card">
+      <div class="g-feature-icon">🎉</div>
+      <h3>Giveaways</h3>
+      <p>Starte Giveaways per Command oder Dashboard — inklusive Entry-Tracking, automatischer Ziehung und Reroll-Funktion.</p>
+    </div>
+
+    <div class="g-feature-card">
+      <div class="g-feature-icon">🎵</div>
+      <h3>Musik</h3>
+      <p>Spiele Musik aus YouTube ab — mit Queue, Skip, Pause, Volume-Kontrolle und stabilem Voice-Connection-Handling.</p>
+    </div>
+
+    <div class="g-feature-card">
+      <div class="g-feature-icon">📊</div>
+      <h3>Web-Dashboard</h3>
+      <p>Alle Einstellungen an einem Ort: Discord-Login, Live-Statistiken, Member-Management und Konfiguration in Echtzeit.</p>
+    </div>
+
+    <div class="g-feature-card">
+      <div class="g-feature-icon">📨</div>
+      <h3>Nachrichten</h3>
+      <p>Versende eigene Embed-Nachrichten mit Titel, Farbe, Bild und Footer direkt aus dem Dashboard in jeden Kanal.</p>
+    </div>
+
+    <div class="g-feature-card">
+      <div class="g-feature-icon">📋</div>
+      <h3>Mod-Logs</h3>
+      <p>Jede Moderationsaktion wird protokolliert — im Log-Kanal deines Servers und übersichtlich im Dashboard.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ CTA ═══════════ -->
+  <section class="g-features-cta">
+    <h2>Bereit für pOky?</h2>
+    <p>Lade den Bot in deinen Server ein und richte alles in wenigen Minuten ein.</p>
+    <div class="g-cta g-cta-center">
+      <a href="https://discord.com/oauth2/authorize?client_id=1503069687263526922&permissions=8&integration_type=0&scope=bot" target="_blank" class="g-btn g-btn-primary g-btn-lg">Hol dir pOky jetzt</a>
+      <a href="/login" class="g-arrow-link">Zum Dashboard <span class="g-arrow">&rarr;</span></a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <div class="footer-left">
+      <div class="logo" style="margin-bottom:8px">
+        <div class="logo-wrap" style="width:24px;height:24px">
+          <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:12px;height:12px">
+            <circle cx="50" cy="52" r="42" fill="#FFB7C5"/>
+            <circle cx="34" cy="44" r="7" fill="#111"/>
+            <circle cx="66" cy="44" r="7" fill="#111"/>
+          </svg>
+        </div>
+        <span class="logo-text" style="font-size:14px">pOky</span>
+      </div>
+      <p class="footer-copy">© 2026 pOky Bot. Alle Rechte vorbehalten.</p>
+    </div>
+    <div class="footer-links">
+      <a href="/">Start</a>
+      <a href="/terms">Nutzungsbedingungen</a>
+      <a href="/privacy">Datenschutz</a>
+      <a href="mailto:poky-bot@web.de">Support</a>
+      <a href="https://discord.com/oauth2/authorize?client_id=1503069687263526922&permissions=8&integration_type=0&scope=bot" target="_blank">Einladen</a>
+      <% if (user) { %>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/logout">Abmelden</a>
+      <% } else { %>
+        <a href="/login">Anmelden</a>
+      <% } %>
+    </div>
+  </footer>
+</div>
+
+<script src="/js/animated-bg.js"></script>
+<script src="/js/mail-link.js"></script>
+</body>
+</html>

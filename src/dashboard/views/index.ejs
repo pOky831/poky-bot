@@ -3,242 +3,148 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>pOky Bot — Dein Allround Discord Bot</title>
-<meta name="description" content="Moderation, Tickets, Leveling & Giveaways — pOky ist der All-in-One Discord Bot für deine Community.">
+<title>pOky Bot — Mache deinen Server smarter!</title>
+<meta name="description" content="pOky ist der All-in-One Discord Bot für deine Community — Auto-Mod, Warnsystem, Tickets, Leveling, Giveaways, Musik und Web-Dashboard.">
 <link rel="stylesheet" href="/css/style.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body class="landing-body">
 
 <canvas id="bg"></canvas>
 <div class="bg-glow"></div>
 
-<div class="landing-container">
-  <nav class="landing-nav">
-    <div class="logo">
-      <div class="logo-wrap">
-        <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="52" r="42" fill="#FFB7C5"/>
-          <circle cx="34" cy="44" r="7" fill="#111"/>
-          <circle cx="66" cy="44" r="7" fill="#111"/>
-          <circle cx="32" cy="42" r="2.5" fill="#fff"/>
-          <circle cx="64" cy="42" r="2.5" fill="#fff"/>
-          <path d="M44 63 Q50 69 56 63" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.35"/>
-          <ellipse cx="34" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
-          <ellipse cx="66" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
-        </svg>
-      </div>
+<div class="landing-container g-page">
+
+  <!-- ═══════════ NAVBAR (floating) ═══════════ -->
+  <nav class="g-nav">
+    <a href="/" class="g-brand">
+      <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="52" r="42" fill="#FFB7C5"/>
+        <circle cx="34" cy="44" r="7" fill="#111"/>
+        <circle cx="66" cy="44" r="7" fill="#111"/>
+        <circle cx="32" cy="42" r="2.5" fill="#fff"/>
+        <circle cx="64" cy="42" r="2.5" fill="#fff"/>
+        <path d="M44 63 Q50 69 56 63" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.35"/>
+        <ellipse cx="34" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+        <ellipse cx="66" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+      </svg>
       <span class="logo-text">pOky</span>
-    </div>
-    <div class="landing-nav-links">
+    </a>
+    <div class="g-links">
+      <a href="/" class="g-link active">Start</a>
+      <a href="/funktionen" class="g-link">Funktionen</a>
+      <a href="mailto:poky-bot@web.de" class="g-link">Support</a>
       <% if (user) { %>
-        <a href="/dashboard" class="btn btn-primary">Dashboard</a>
-        <a href="/logout" class="btn btn-outline">Abmelden</a>
+        <a href="/dashboard" class="g-link">Dashboard</a>
+      <% } %>
+    </div>
+    <div class="g-actions">
+      <% if (user) { %>
+        <a href="/dashboard" class="g-btn g-btn-primary">Zum Dashboard</a>
+        <a href="/logout" class="g-btn g-btn-ghost">Abmelden</a>
       <% } else { %>
-        <a href="/login" class="btn btn-primary">Sign in</a>
+        <a href="/login" class="g-btn g-btn-primary">Dashboard</a>
       <% } %>
     </div>
   </nav>
 
   <!-- ═══════════ HERO ═══════════ -->
-  <section class="landing-hero">
-    <div class="landing-hero-left">
-      <div class="badge badge-landing">
-        <span class="badge-dot"></span>
-        <span class="badge-text">Online &middot; Bereit für deinen Server</span>
-      </div>
+  <header class="g-hero">
+    <span class="badge-landing g-badge"><span class="badge-dot"></span> Online &middot; Bereit für deinen Server</span>
 
-      <h1 class="landing-title">
-        P<svg class="kirby-o" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="52" r="42" fill="#FFB7C5"/>
-          <circle cx="34" cy="44" r="7" fill="#111"/>
-          <circle cx="66" cy="44" r="7" fill="#111"/>
-          <circle cx="32" cy="42" r="2.5" fill="#fff"/>
-          <circle cx="64" cy="42" r="2.5" fill="#fff"/>
-          <path d="M44 63 Q50 69 56 63" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.35"/>
-          <ellipse cx="34" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
-          <ellipse cx="66" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
-        </svg>ky <span class="grad">Bot</span>
-      </h1>
+    <h1 class="g-title">Mache deinen<br>Server smarter!</h1>
 
-      <p class="landing-sub">
-        Der All-in-One Discord Bot für deine Community — mit smartem Auto-Mod, flexiblem Ticket-System, Leveling, Giveaways und einem eleganten Web-Dashboard.
-      </p>
+    <p class="g-sub">
+      pOky ist ein Bot für Discord, der dir hilft, deinen Discord-Server und deine Community
+      zu optimieren — mit Auto-Mod, Warnsystem, Tickets, Leveling, Giveaways, Musik und
+      einem kompletten Web-Dashboard. Alles konfigurierbar in wenigen Minuten.
+    </p>
 
-      <div class="landing-actions">
-        <% if (user) { %>
-          <a href="/dashboard" class="btn btn-primary btn-large">Zum Dashboard</a>
-          <a href="/logout" class="btn btn-outline btn-large">Abmelden</a>
-        <% } else { %>
-          <a href="https://discord.com/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-primary btn-large">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-            Add to Discord
-          </a>
-          <a href="/login" class="btn btn-outline btn-large">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-            Mit Discord anmelden
-          </a>
-        <% } %>
-      </div>
-
-      <!-- Live Stats Counter -->
-      <div class="live-stats">
-        <div class="live-stat">
-          <span class="live-stat-num"><span id="stat-guilds" data-target="0">0</span></span>
-          <span class="live-stat-label">Server</span>
-        </div>
-        <div class="live-stat">
-          <span class="live-stat-num"><span id="stat-members" data-target="0">0</span></span>
-          <span class="live-stat-label">Mitglieder</span>
-        </div>
-        <div class="live-stat">
-          <span class="live-stat-num"><span id="stat-giveaways" data-target="0">0</span></span>
-          <span class="live-stat-label">Giveaways</span>
-        </div>
-        <div class="live-stat">
-          <span class="live-stat-num"><span id="stat-commands" data-target="7">7</span></span>
-          <span class="live-stat-label">Commands</span>
-        </div>
-      </div>
+    <div class="g-cta">
+      <a href="https://discord.com/oauth2/authorize?client_id=1503069687263526922&permissions=8&integration_type=0&scope=bot" target="_blank" class="g-btn g-btn-primary g-btn-lg">Hol dir pOky jetzt</a>
+      <a href="/funktionen" class="g-arrow-link">Entdecke die Funktionen <span class="g-arrow">&rarr;</span></a>
     </div>
 
-    <div class="hero-divider"></div>
-
-    <div class="landing-hero-right">
-      <div class="feature-card-new">
-        <div class="card-glow-orb"></div>
-        <div class="card-icon-new">🛡️</div>
-        <span class="card-name-new">Automod</span>
-        <span class="card-desc-new">Smart content filtering</span>
+    <!-- Live Stats -->
+    <div class="live-stats g-stats">
+      <div class="live-stat">
+        <span class="live-stat-num"><span id="stat-guilds" data-target="0">0</span></span>
+        <span class="live-stat-label">Server</span>
       </div>
-      <div class="feature-card-new">
-        <div class="card-glow-orb"></div>
-        <div class="card-icon-new">⚠️</div>
-        <span class="card-name-new">Warnsystem</span>
-        <span class="card-desc-new">Strike-based moderation</span>
+      <div class="live-stat">
+        <span class="live-stat-num"><span id="stat-members" data-target="0">0</span></span>
+        <span class="live-stat-label">Mitglieder</span>
       </div>
-      <div class="feature-card-new">
-        <div class="card-glow-orb"></div>
-        <div class="card-icon-new">🎫</div>
-        <span class="card-name-new">Tickets</span>
-        <span class="card-desc-new">Support &amp; claims</span>
+      <div class="live-stat">
+        <span class="live-stat-num"><span id="stat-giveaways" data-target="0">0</span></span>
+        <span class="live-stat-label">Giveaways</span>
       </div>
-      <div class="feature-card-new">
-        <div class="card-glow-orb"></div>
-        <div class="card-icon-new">⬆️</div>
-        <span class="card-name-new">Leveling</span>
-        <span class="card-desc-new">XP &amp; leaderboards</span>
-      </div>
-      <div class="feature-card-new">
-        <div class="card-glow-orb"></div>
-        <div class="card-icon-new">🎉</div>
-        <span class="card-name-new">Giveaways</span>
-        <span class="card-desc-new">Automated prize draws</span>
-      </div>
-      <div class="feature-card-new">
-        <div class="card-glow-orb"></div>
-        <div class="card-icon-new">📊</div>
-        <span class="card-name-new">Dashboard</span>
-        <span class="card-desc-new">Web configuration</span>
+      <div class="live-stat">
+        <span class="live-stat-num"><span id="stat-commands" data-target="7">7</span></span>
+        <span class="live-stat-label">Commands</span>
       </div>
     </div>
-  </section>
+  </header>
 
-  <!-- ═══════════ FUNKTIONEN ═══════════ -->
-  <section class="functions-section" id="functions">
-    <div class="functions-head">
-      <span class="functions-badge">Funktionen</span>
-      <h2 class="functions-title">Alles was dein Server braucht</h2>
-      <p class="functions-sub">Sechs mächtige Module — alle in einem Bot.</p>
-    </div>
-
-    <div class="functions-grid">
-      <div class="func-card">
-        <div class="func-card-accent"></div>
-        <div class="func-icon-wrap"><span class="func-icon">🛡️</span></div>
-        <div class="func-body">
-          <h3>Auto-Moderation</h3>
-          <p>Schütze deinen Server automatisch vor Spam, Links, Massen-Mentions und Bad Words — konfigurierbar in Echtzeit über das Dashboard.</p>
-          <div class="func-tags">
-            <span class="func-tag">Spam-Filter</span>
-            <span class="func-tag">Link-Blocker</span>
-            <span class="func-tag">Bad Words</span>
-            <span class="func-tag">Mention-Cap</span>
-          </div>
+  <!-- ═══════════ PRODUKT-VORSCHAU (Mockup) ═══════════ -->
+  <section class="g-preview">
+    <div class="g-mock">
+      <div class="g-mock-head">
+        <div class="g-mock-brand">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px">
+            <circle cx="50" cy="52" r="42" fill="#FFB7C5"/>
+            <circle cx="34" cy="44" r="7" fill="#111"/>
+            <circle cx="66" cy="44" r="7" fill="#111"/>
+            <circle cx="32" cy="42" r="2.5" fill="#fff"/>
+            <circle cx="64" cy="42" r="2.5" fill="#fff"/>
+            <ellipse cx="34" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+            <ellipse cx="66" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+          </svg>
+          <span>pOky Dashboard</span>
         </div>
+        <div class="g-mock-dots"><span></span><span></span><span></span></div>
       </div>
-
-      <div class="func-card">
-        <div class="func-card-accent"></div>
-        <div class="func-icon-wrap"><span class="func-icon">⚠️</span></div>
-        <div class="func-body">
-          <h3>Warnsystem</h3>
-          <p>3-Strike-System mit automatischen Eskalationen: Verwarnung → Warn-Rolle → Timeout. Inklusive Mod-Log und interaktivem Member-Dashboard.</p>
-          <div class="func-tags">
-            <span class="func-tag">Warn-Rollen</span>
-            <span class="func-tag">Auto-Timeout</span>
-            <span class="func-tag">Mod-Log</span>
-            <span class="func-tag">Notizen</span>
-          </div>
+      <div class="g-mock-body">
+        <div class="g-mock-side">
+          <div class="g-mock-side-item active"><span>📊</span> Übersicht</div>
+          <div class="g-mock-side-item"><span>📈</span> Leveling</div>
+          <div class="g-mock-side-item"><span>🛡️</span> Auto-Mod</div>
+          <div class="g-mock-side-item"><span>🎉</span> Giveaways</div>
+          <div class="g-mock-side-item"><span>🎫</span> Tickets</div>
+          <div class="g-mock-side-item"><span>📋</span> Mod-Logs</div>
+          <div class="g-mock-side-item"><span>👥</span> Mitglieder</div>
+          <div class="g-mock-side-item"><span>🎵</span> Musik</div>
         </div>
-      </div>
-
-      <div class="func-card">
-        <div class="func-card-accent"></div>
-        <div class="func-icon-wrap"><span class="func-icon">🎫</span></div>
-        <div class="func-body">
-          <h3>Ticket-System</h3>
-          <p>Professionelles Support-Ticket-System mit Select-Menü-Panel, Support-Rollen, Chat-Verlauf im Dashboard und mehreren Kategorien.</p>
-          <div class="func-tags">
-            <span class="func-tag">Select-Menü</span>
-            <span class="func-tag">Support-Rollen</span>
-            <span class="func-tag">Chat-Verlauf</span>
-            <span class="func-tag">Mehrere Kategorien</span>
+        <div class="g-mock-main">
+          <div class="g-mock-card">
+            <div class="g-mock-card-icon">🛡️</div>
+            <div class="g-mock-card-title">Auto-Mod</div>
+            <div class="g-mock-card-desc">Spam · Links · Bad Words</div>
           </div>
-        </div>
-      </div>
-
-      <div class="func-card">
-        <div class="func-card-accent"></div>
-        <div class="func-icon-wrap"><span class="func-icon">⬆️</span></div>
-        <div class="func-body">
-          <h3>Level-System</h3>
-          <p>Belohne Aktivität mit XP und Level-Aufstiegen. Konfiguriere Level-Rollen, Leaderboards und einen eigenen Announcement-Channel.</p>
-          <div class="func-tags">
-            <span class="func-tag">XP-System</span>
-            <span class="func-tag">Level-Rollen</span>
-            <span class="func-tag">Leaderboard</span>
-            <span class="func-tag">Rank-Card</span>
+          <div class="g-mock-card">
+            <div class="g-mock-card-icon">🎫</div>
+            <div class="g-mock-card-title">Tickets</div>
+            <div class="g-mock-card-desc">Support &amp; Claims</div>
           </div>
-        </div>
-      </div>
-
-      <div class="func-card">
-        <div class="func-card-accent"></div>
-        <div class="func-icon-wrap"><span class="func-icon">🎉</span></div>
-        <div class="func-body">
-          <h3>Giveaways</h3>
-          <p>Starte, verwalte und beende Giveaways direkt über Slash-Commands oder das Web-Dashboard — inklusive Reroll-Funktion und Entry-Tracking.</p>
-          <div class="func-tags">
-            <span class="func-tag">Slash-Commands</span>
-            <span class="func-tag">Reroll</span>
-            <span class="func-tag">Entry-Tracking</span>
-            <span class="func-tag">Dashboard-Sync</span>
+          <div class="g-mock-card">
+            <div class="g-mock-card-icon">📈</div>
+            <div class="g-mock-card-title">Leveling</div>
+            <div class="g-mock-card-desc">XP · Rollen · Ranks</div>
           </div>
-        </div>
-      </div>
-
-      <div class="func-card">
-        <div class="func-card-accent"></div>
-        <div class="func-icon-wrap"><span class="func-icon">🌐</span></div>
-        <div class="func-body">
-          <h3>Web-Dashboard</h3>
-          <p>Konfiguriere alle Features über ein elegantes, responsives Web-Dashboard mit Discord-Login, Echtzeit-Statistiken und Member-Management.</p>
-          <div class="func-tags">
-            <span class="func-tag">Discord OAuth2</span>
-            <span class="func-tag">Live-Stats</span>
-            <span class="func-tag">Member-View</span>
-            <span class="func-tag">Responsive</span>
+          <div class="g-mock-card">
+            <div class="g-mock-card-icon">⚠️</div>
+            <div class="g-mock-card-title">Warnsystem</div>
+            <div class="g-mock-card-desc">3-Strike &amp; Timeout</div>
+          </div>
+          <div class="g-mock-card">
+            <div class="g-mock-card-icon">🎉</div>
+            <div class="g-mock-card-title">Giveaways</div>
+            <div class="g-mock-card-desc">Start · Reroll · Ende</div>
+          </div>
+          <div class="g-mock-card">
+            <div class="g-mock-card-icon">🎵</div>
+            <div class="g-mock-card-title">Musik</div>
+            <div class="g-mock-card-desc">Queue · Volume · Skip</div>
           </div>
         </div>
       </div>
@@ -258,10 +164,14 @@
         </div>
         <span class="logo-text" style="font-size:14px">pOky</span>
       </div>
-      <p class="footer-copy">© 2025 pOky Bot. Alle Rechte vorbehalten.</p>
+      <p class="footer-copy">© 2026 pOky Bot. Alle Rechte vorbehalten.</p>
     </div>
     <div class="footer-links">
-      <a href="https://discord.com/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands" target="_blank">Einladen</a>
+      <a href="/funktionen">Funktionen</a>
+      <a href="/terms">Nutzungsbedingungen</a>
+      <a href="/privacy">Datenschutz</a>
+      <a href="mailto:poky-bot@web.de">Support</a>
+      <a href="https://discord.com/oauth2/authorize?client_id=1503069687263526922&permissions=8&integration_type=0&scope=bot" target="_blank">Einladen</a>
       <% if (user) { %>
         <a href="/dashboard">Dashboard</a>
         <a href="/logout">Abmelden</a>
@@ -273,6 +183,11 @@
 </div>
 
 <script src="/js/animated-bg.js"></script>
+<script src="/js/mail-link.js"></script>
+<script>
+// Dark-only theme – drop any leftover light-mode preference from older builds.
+try { localStorage.removeItem('poky-theme'); } catch (e) { /* ignore */ }
+</script>
 <script>
 // ── Live Stats Fetcher ──
 async function fetchStats() {
@@ -303,20 +218,8 @@ function animateCounter(id, target) {
   requestAnimationFrame(step);
 }
 
-// Fetch on load and every 30s
 fetchStats();
 setInterval(fetchStats, 30000);
-
-// ── Scroll reveal for functions section ──
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.classList.add('visible');
-    }
-  });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.func-card').forEach(c => observer.observe(c));
 </script>
 </body>
 </html>

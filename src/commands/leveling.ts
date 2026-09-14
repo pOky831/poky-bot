@@ -8,6 +8,7 @@ import {
   SlashCommandRoleOption,
 } from "discord.js";
 import { stmts } from "../database/db.js";
+import { xpForLevel } from "../utils/helpers.js";
 
 export const data = new SlashCommandBuilder()
   .setName("level")
@@ -40,18 +41,6 @@ export const data = new SlashCommandBuilder()
         opt.setName("rolle").setDescription("Rolle (für add)").setRequired(false)
       )
   );
-
-function xpForLevel(level: number): number {
-  return Math.floor(100 * Math.pow(level, 1.5));
-}
-
-function levelFromXp(xp: number): number {
-  let level = 1;
-  while (xp >= xpForLevel(level + 1)) {
-    level++;
-  }
-  return level;
-}
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   if (!interaction.guild) {

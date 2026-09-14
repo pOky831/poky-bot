@@ -10,6 +10,7 @@ import {
   ActionRowBuilder,
 } from "discord.js";
 import { stmts } from "../database/db.js";
+import { buildTicketTranscript, sendTranscriptToLog } from "../utils/helpers.js";
 
 export const data = new SlashCommandBuilder()
   .setName("ticket")
@@ -150,18 +151,27 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     const closeReason = interaction.options.getString("grund") ?? "Kein Grund angegeben";
+
+    // Save transcript before closing
+    const transcriptContent = await buildTicketTranscript(
+      channel,
+      channel.id,
+      interaction.user.tag,
+      closeReason
+    );
+
     await stmts.closeTicket(interaction.user.id, interaction.user.tag, closeReason, channel.id);
 
-    // Log to ticket_log_channel (only for command-based close)
+    // Log to ticket_log_channel with transcript
     const settings = await stmts.getGuildSettings(interaction.guild.id);
-    if (settings?.ticket_log_channel_id) {
-      const logChannel = interaction.guild.channels.cache.get(settings.ticket_log_channel_id) as TextChannel | undefined;
-      if (logChannel?.send) {
-        await logChannel.send(
-          `🔒 Ticket <#${channel.id}> geschlossen von **${interaction.user.tag}** — Grund: ${closeReason}`
-        );
-      }
-    }
+    await sendTranscriptToLog(
+      interaction.guild,
+      settings?.ticket_log_channel_id ?? null,
+      transcriptContent,
+      channel.id,
+      interaction.user.tag,
+      closeReason
+    );
 
     await interaction.reply({ content: `Ticket wird gelöscht... Grund: ${closeReason}`, ephemeral: true });
 

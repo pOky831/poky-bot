@@ -1,9 +1,11 @@
 node_modules
 dist
 .env
+
+# yt-dlp binary, fetched with `npm run setup:ytdlp`
+bin/yt-dlp*
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
 *.log
 templates/
-nul

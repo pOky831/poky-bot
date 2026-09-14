@@ -538,6 +538,11 @@ export const stmts = {
     return result.rows[0] as unknown as { count: number } | undefined;
   },
 
+  async getTotalTicketCount(): Promise<{ count: number } | undefined> {
+    const result = await client.execute("SELECT COUNT(*) as count FROM tickets");
+    return result.rows[0] as unknown as { count: number } | undefined;
+  },
+
   async getOpenTicketCount(guildId: string): Promise<{ count: number } | undefined> {
     const result = await client.execute({
       sql: "SELECT COUNT(*) as count FROM tickets WHERE guild_id = ? AND status = 'open'",

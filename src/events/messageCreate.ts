@@ -1,5 +1,6 @@
-import { Message, TextChannel } from "discord.js";
+import { Message, TextChannel, EmbedBuilder } from "discord.js";
 import { stmts } from "../database/db.js";
+import { xpForLevel } from "../utils/helpers.js";
 
 // Spam tracking: Map<guildId, Map<userId, timestamp[]>>
 const messageCache = new Map<string, Map<string, number[]>>();
@@ -30,17 +31,14 @@ setInterval(() => {
   }
 }, 60_000);
 
-function xpForLevel(level: number): number {
-  return Math.floor(100 * Math.pow(level, 1.5));
-}
-
 export async function handleMessageCreate(message: Message): Promise<void> {
   // Ignore bots and DMs
   if (message.author.bot || !message.guild) return;
 
   const guildId = message.guild.id;
+  const channel = message.channel as TextChannel;
 
-  // Fetch automod config
+  // ── Automod (only if enabled) ──
   const configRow = await stmts.getAutomodConfig(guildId) as {
     automod_enabled: number;
     automod_spam_threshold: number;
@@ -48,114 +46,110 @@ export async function handleMessageCreate(message: Message): Promise<void> {
     automod_mention_cap: number;
   } | undefined;
 
-  if (!configRow || !configRow.automod_enabled) return;
+  if (configRow && configRow.automod_enabled) {
+    const { automod_spam_threshold, automod_link_filter, automod_mention_cap } = configRow;
 
-  const { automod_spam_threshold, automod_link_filter, automod_mention_cap } = configRow;
-  const channel = message.channel as TextChannel;
-
-  // ── Bad Word Filter ──
-  const badWords = await stmts.getAutomodWords(guildId) as string[];
-  if (badWords.length > 0) {
-    const content = message.content.toLowerCase();
-    const foundWord = badWords.find((word) => content.includes(word.toLowerCase()));
-    if (foundWord) {
-      try {
-        await message.delete();
-        const reply = await channel.send(
-          `⚠️ ${message.author}, unangemessene Wörter sind nicht erlaubt.`
-        );
-        setTimeout(() => reply.delete().catch(() => {}), 5000);
-      } catch {
-        // Missing permissions, silently ignore
-      }
-      return; // Don't check other filters if message was deleted
-    }
-  }
-
-  // ── Link Filter ──
-  if (automod_link_filter) {
-    const linkRegex = /https?:\/\/[^\s]+|discord\.gg\/[^\s]+/i;
-    if (linkRegex.test(message.content)) {
-      try {
-        await message.delete();
-        const reply = await channel.send(
-          `🔗 ${message.author}, Links sind auf diesem Server nicht erlaubt.`
-        );
-        setTimeout(() => reply.delete().catch(() => {}), 5000);
-      } catch {
-        // Missing permissions
-      }
-      return;
-    }
-  }
-
-  // ── Mention Cap ──
-  if (automod_mention_cap > 0) {
-    const mentionCount = message.mentions.users.size + message.mentions.roles.size;
-    if (mentionCount > automod_mention_cap) {
-      try {
-        await message.delete();
-        const reply = await channel.send(
-          `📢 ${message.author}, zu viele Mentions! Maximal ${automod_mention_cap} erlaubt.`
-        );
-        setTimeout(() => reply.delete().catch(() => {}), 5000);
-      } catch {
-        // Missing permissions
-      }
-      return;
-    }
-  }
-
-  // ── Anti-Spam ──
-  if (automod_spam_threshold > 0) {
-    if (!messageCache.has(guildId)) {
-      messageCache.set(guildId, new Map());
-    }
-    const guildCache = messageCache.get(guildId)!;
-    if (!guildCache.has(message.author.id)) {
-      guildCache.set(message.author.id, []);
-    }
-
-    const now = Date.now();
-    const timestamps = guildCache.get(message.author.id)!;
-    // Remove old timestamps outside the window
-    const recent = timestamps.filter((ts) => now - ts < SPAM_WINDOW_MS);
-    recent.push(now);
-    guildCache.set(message.author.id, recent);
-
-    if (recent.length >= automod_spam_threshold) {
-      // Spam detected
-      try {
-        // Delete the spam messages (last few messages from this user)
-        const messages = await channel.messages.fetch({ limit: 20 });
-        const userMessages = messages.filter(
-          (m) => m.author.id === message.author.id && Date.now() - m.createdTimestamp < SPAM_WINDOW_MS + 2000
-        );
-        for (const [, msg] of userMessages) {
-          await msg.delete().catch(() => {});
-        }
-
-        // Try to timeout the user
-        const member = await message.guild.members.fetch(message.author.id).catch(() => null);
-        if (member?.moderatable) {
-          await member.timeout(60_000, "Auto-Mod: Spam").catch(() => {});
+    // ── Bad Word Filter ──
+    const badWords = await stmts.getAutomodWords(guildId) as string[];
+    if (badWords.length > 0) {
+      const content = message.content.toLowerCase();
+      const foundWord = badWords.find((word) => content.includes(word.toLowerCase()));
+      if (foundWord) {
+        try {
+          await message.delete();
           const reply = await channel.send(
-            `🔇 ${message.author} wurde für 1 Minute stummgeschaltet (Spam).`
+            `⚠️ ${message.author}, unangemessene Wörter sind nicht erlaubt.`
           );
           setTimeout(() => reply.delete().catch(() => {}), 5000);
-        } else {
+        } catch {
+          // Missing permissions, silently ignore
+        }
+        return; // Don't give XP for deleted messages
+      }
+    }
+
+    // ── Link Filter ──
+    if (automod_link_filter) {
+      const linkRegex = /https?:\/\/[^\s]+|discord\.gg\/[^\s]+/i;
+      if (linkRegex.test(message.content)) {
+        try {
+          await message.delete();
           const reply = await channel.send(
-            `⚠️ ${message.author}, bitte höre auf zu spammen!`
+            `🔗 ${message.author}, Links sind auf diesem Server nicht erlaubt.`
           );
           setTimeout(() => reply.delete().catch(() => {}), 5000);
+        } catch {
+          // Missing permissions
         }
-      } catch {
-        // Missing permissions
+        return;
+      }
+    }
+
+    // ── Mention Cap ──
+    if (automod_mention_cap > 0) {
+      const mentionCount = message.mentions.users.size + message.mentions.roles.size;
+      if (mentionCount > automod_mention_cap) {
+        try {
+          await message.delete();
+          const reply = await channel.send(
+            `📢 ${message.author}, zu viele Mentions! Maximal ${automod_mention_cap} erlaubt.`
+          );
+          setTimeout(() => reply.delete().catch(() => {}), 5000);
+        } catch {
+          // Missing permissions
+        }
+        return;
+      }
+    }
+
+    // ── Anti-Spam ──
+    if (automod_spam_threshold > 0) {
+      if (!messageCache.has(guildId)) {
+        messageCache.set(guildId, new Map());
+      }
+      const guildCache = messageCache.get(guildId)!;
+      if (!guildCache.has(message.author.id)) {
+        guildCache.set(message.author.id, []);
+      }
+
+      const now = Date.now();
+      const timestamps = guildCache.get(message.author.id)!;
+      const recent = timestamps.filter((ts) => now - ts < SPAM_WINDOW_MS);
+      recent.push(now);
+      guildCache.set(message.author.id, recent);
+
+      if (recent.length >= automod_spam_threshold) {
+        try {
+          const messages = await channel.messages.fetch({ limit: 20 });
+          const userMessages = messages.filter(
+            (m) => m.author.id === message.author.id && Date.now() - m.createdTimestamp < SPAM_WINDOW_MS + 2000
+          );
+          for (const [, msg] of userMessages) {
+            await msg.delete().catch(() => {});
+          }
+
+          const member = await message.guild.members.fetch(message.author.id).catch(() => null);
+          if (member?.moderatable) {
+            await member.timeout(60_000, "Auto-Mod: Spam").catch(() => {});
+            const reply = await channel.send(
+              `🔇 ${message.author} wurde für 1 Minute stummgeschaltet (Spam).`
+            );
+            setTimeout(() => reply.delete().catch(() => {}), 5000);
+          } else {
+            const reply = await channel.send(
+              `⚠️ ${message.author}, bitte höre auf zu spammen!`
+            );
+            setTimeout(() => reply.delete().catch(() => {}), 5000);
+          }
+        } catch {
+          // Missing permissions
+        }
+        return; // Don't give XP for spam messages
       }
     }
   }
 
-  // ── XP / Leveling System ──
+  // ── XP / Leveling System (always runs, independent of automod) ──
   const xpKey = `${guildId}_${message.author.id}`;
   const now = Date.now();
   const lastXp = xpCooldowns.get(xpKey);
@@ -174,7 +168,7 @@ export async function handleMessageCreate(message: Message): Promise<void> {
 
     await stmts.addUserXp(guildId, message.author.id, xpGain, newLevel);
 
-    // Check if user leveled up and assign role rewards
+    // Check if user leveled up and assign role rewards + send announcement
     if (newLevel > (current?.level ?? 1)) {
       const levelRoles = await stmts.getLevelRoles(guildId);
       for (const lr of levelRoles) {
@@ -183,6 +177,24 @@ export async function handleMessageCreate(message: Message): Promise<void> {
           if (member) {
             await member.roles.add(lr.role_id).catch(() => {});
           }
+        }
+      }
+
+      // ── Level-Up Channel Announcement ──
+      const levelChannelId = await stmts.getLevelChannel(guildId);
+      if (levelChannelId) {
+        const levelChannel = message.guild.channels.cache.get(levelChannelId) as TextChannel | undefined;
+        if (levelChannel?.send) {
+          const congratsEmbed = new EmbedBuilder()
+            .setTitle("🎉 Level Up!")
+            .setColor(0xf799b9)
+            .setDescription(
+              `GG <@${message.author.id}>! Du bist auf **Level ${newLevel}** aufgestiegen! 🚀`
+            )
+            .setThumbnail(message.author.displayAvatarURL())
+            .setFooter({ text: `Gesamt-XP: ${newXp}` })
+            .setTimestamp();
+          await levelChannel.send({ embeds: [congratsEmbed] }).catch(() => {});
         }
       }
     }

@@ -7,17 +7,21 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "setup:ytdlp": "node scripts/fetch-ytdlp.mjs"
   },
   "dependencies": {
+    "@discordjs/voice": "^0.19.2",
     "@libsql/client": "^0.14.0",
     "discord.js": "^14.16.3",
     "dotenv": "^16.6.1",
     "ejs": "^5.0.2",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
+    "libsodium-wrappers": "^0.8.4",
     "passport": "^0.7.0",
-    "passport-discord": "^0.1.4"
+    "passport-discord": "^0.1.4",
+    "play-dl": "^1.9.7"
   },
   "devDependencies": {
     "@types/express": "^5.0.2",

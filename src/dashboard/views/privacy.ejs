@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datenschutzerklärung | pOky Bot</title>
+<meta name="description" content="Datenschutzerklärung für den pOky Discord Bot und das zugehörige Dashboard.">
+<link rel="stylesheet" href="/css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="legal-body">
+<canvas id="bg"></canvas>
+<div class="bg-glow"></div>
+
+<div class="legal-container">
+  <nav class="legal-nav">
+    <div class="logo">
+      <div class="logo-wrap">
+        <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="52" r="42" fill="#FFB7C5"/>
+          <circle cx="34" cy="44" r="7" fill="#111"/>
+          <circle cx="66" cy="44" r="7" fill="#111"/>
+          <circle cx="32" cy="42" r="2.5" fill="#fff"/>
+          <circle cx="64" cy="42" r="2.5" fill="#fff"/>
+          <path d="M44 63 Q50 69 56 63" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.35"/>
+          <ellipse cx="34" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+          <ellipse cx="66" cy="86" rx="9" ry="5.5" fill="#FF8FAB"/>
+        </svg>
+      </div>
+      <span class="logo-text">pOky</span>
+    </div>
+    <a href="/" class="btn btn-outline">← Zurück</a>
+  </nav>
+
+  <h1 class="legal-title">Datenschutzerklärung</h1>
+  <p class="legal-updated">Zuletzt aktualisiert: 13. September 2026</p>
+
+  <div class="legal-content">
+    <h2>1. Verantwortlicher</h2>
+    <p>
+      Verantwortlich für die Datenverarbeitung im Rahmen des Discord-Bots <strong>pOky</strong>
+      und des Web-Dashboards ist:<br>
+      <em>Dein Name / dein Server-Team — bitte hier Kontaktdaten eintragen.</em>
+    </p>
+
+    <h2>2. Welche Daten wir verarbeiten</h2>
+    <p>Je nach Nutzung werden folgende Daten gespeichert:</p>
+    <ul>
+      <li><strong>Server-Daten (Guild-ID, Servername):</strong> um Einstellungen pro Server zu speichern (z.&nbsp;B. Log-Kanal, Ticket-Panel, Levelrollen).</li>
+      <li><strong>Moderationsdaten:</strong> Verwarnungen (Warns), Timeouts, Mod-Log-Einträge — inklusive betroffener Nutzer-ID, Nutzername, Grund und Moderatoren-ID.</li>
+      <li><strong>Ticket-Daten:</strong> Ticket-Kanal, Ticket-Grund, Status und Verlauf.</li>
+      <li><strong>Level-Daten:</strong> XP und Level pro Mitglied, Levelrollen.</li>
+      <li><strong>Giveaway-Daten:</strong> Teilnahmen und Gewinner.</li>
+      <li><strong>Mitgliedsnotizen:</strong> Notizen von Moderatoren über Mitglieder.</li>
+      <li><strong>Dashboard-Konto (OAuth2):</strong> Discord-Nutzer-ID, Nutzername, Avatar und die Liste der Server, auf denen du Administrator bist — ausschließlich zur Anzeige und Verwaltung deiner Server im Dashboard.</li>
+    </ul>
+    <p>
+      Der Bot liest keine Nachrichteninhalte dauerhaft ein; Nachrichten werden nur temporär
+      verarbeitet (z.&nbsp;B. für Auto-Mod-Filter, Commands oder das Ticket-Archiv im Dashboard).
+    </p>
+
+    <h2>3. Zwecke und Rechtsgrundlagen (DSGVO)</h2>
+    <p>
+      Die Verarbeitung erfolgt auf Grundlage von <strong>Art. 6 Abs. 1 lit. f DSGVO</strong>
+      (berechtigtes Interesse am Betrieb des Bots) bzw. — bei Dashboard-Login — auf Grundlage
+      deiner Einwilligung über den Discord-OAuth2-Flow (Art. 6 Abs. 1 lit. a DSGVO).
+      Serverdaten werden verarbeitet, um die gewünschten Bot-Funktionen bereitzustellen.
+    </p>
+
+    <h2>4. Speicherdauer &amp; Löschung</h2>
+    <ul>
+      <li>Serverbezogene Daten werden gespeichert, solange der Bot auf dem Server ist.</li>
+      <li>
+        Beim Entfernen des Bots aus einem Server werden alle zugehörigen Serverdaten
+        (Einstellungen, Warns, Tickets, Level etc.) gelöscht — siehe den
+        <code>guildDelete</code>-Handler.
+      </li>
+      <li>Dashboard-Sessions laufen nach 24 Stunden automatisch ab.</li>
+    </ul>
+
+    <h2>5. Weitergabe von Daten</h2>
+    <p>
+      Daten werden <strong>nicht</strong> an Dritte verkauft oder zu Werbezwecken weitergegeben.
+      Technisch notwendige Dienstleister (z.&nbsp;B. Hosting-Provider wie Render) verarbeiten Daten
+      im Rahmen eines Auftragsverarbeitungsvertrags. Discord selbst verarbeitet Daten gemäß der
+      <a href="https://discord.com/privacy" target="_blank" rel="noopener">Discord-Datenschutzerklärung</a>.
+    </p>
+
+    <h2>6. Deine Rechte</h2>
+    <p>
+      Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
+      Datenübertragbarkeit und Widerspruch (Art. 15–21 DSGVO). Wende dich dafür einfach an den
+      Support (siehe Kontakt). Außerdem hast du das Recht, dich bei einer Aufsichtsbehörde zu beschweren.
+    </p>
+
+    <h2>7. Cookies &amp; lokale Speicherung</h2>
+    <p>
+      Das Dashboard verwendet technisch notwendige Session-Cookies (express-session), um dich
+      nach dem Discord-Login einzuloggen. Es werden keine Tracking- oder Marketing-Cookies gesetzt.
+    </p>
+
+    <h2>8. Änderungen dieser Erklärung</h2>
+    <p>
+      Diese Datenschutzerklärung kann bei Änderungen des Dienstes angepasst werden. Die aktuelle
+      Version ist immer auf dieser Seite abrufbar.
+    </p>
+
+    <h2>9. Kontakt</h2>
+    <p>
+      Bei Fragen oder Anliegen zum Datenschutz erreichst du uns über den offiziellen
+      <a href="https://discord.gg/" target="_blank" rel="noopener">Discord-Support-Server</a>
+      oder per E-Mail an <a href="mailto:poky-bot@web.de">poky-bot@web.de</a>.
+    </p>
+  </div>
+
+  <footer class="legal-footer">
+    <a href="/terms">Nutzungsbedingungen</a> · <a href="/privacy">Datenschutzerklärung</a>
+  </footer>
+</div>
+
+<script src="/js/animated-bg.js"></script>
+<script src="/js/mail-link.js"></script>
+</body>
+</html>

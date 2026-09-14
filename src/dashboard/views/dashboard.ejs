@@ -10,6 +10,8 @@
 <body class="dashboard-body">
 
 <canvas id="bg"></canvas>
+<div class="bg-glow"></div>
+<div class="stripes"></div>
 
 <aside class="sidebar">
   <div class="sidebar-head">
@@ -27,6 +29,32 @@
     </div>
     <span class="logo-text">pOky</span>
   </div>
+
+  <div class="side-clock">
+    <div class="side-clock-time" id="side-clock-time">--:--</div>
+    <div class="side-clock-date" id="side-clock-date"></div>
+  </div>
+
+  <script>
+  (function () {
+    var timeEl = document.getElementById('side-clock-time');
+    var dateEl = document.getElementById('side-clock-date');
+    if (!timeEl) return;
+
+    var timeFmt = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' });
+    var dateFmt = new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: 'numeric', month: 'long' });
+
+    function render() {
+      var now = new Date();
+      timeEl.textContent = timeFmt.format(now);
+      if (dateEl) dateEl.textContent = dateFmt.format(now);
+      // re-align to the next full minute
+      setTimeout(render, 60000 - (Date.now() % 60000) + 50);
+    }
+
+    render();
+  })();
+  </script>
 
   <div class="sidebar-user">
     <div style="position:relative">
@@ -72,6 +100,10 @@
     <a href="/" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-secondary)'">← Zurück zur Startseite</a>
     <a href="/logout" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-secondary)'">Abmelden</a>
   </div>
+  <script>
+  // Dark-only theme – drop any leftover light-mode preference from older builds.
+  try { localStorage.removeItem('poky-theme'); } catch (e) { /* ignore */ }
+  </script>
 </aside>
 
 <main class="main-content">
@@ -95,13 +127,15 @@
   </div>
 
   <div class="content-area">
+    <div class="dash-cols">
+      <div class="dash-cols-main">
     <% if (guilds.length === 0) { %>
       <div class="empty-state-wrapper">
         <div class="empty-state-icon">🔒</div>
         <h2>Keine Server gefunden</h2>
         <p>Du hast auf keinem Server Admin-Rechte. Lade den Bot auf einen Server ein, um loszulegen.</p>
         <% if (typeof clientId !== 'undefined') { %>
-          <a href="https://discord.com/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-primary" style="margin-top:24px">Bot einladen</a>
+          <a href="https://discord.com/oauth2/authorize?client_id=1503069687263526922&permissions=8&integration_type=0&scope=bot" target="_blank" class="btn btn-primary" style="margin-top:24px">Bot einladen</a>
         <% } %>
       </div>
     <% } else { %>
@@ -146,10 +180,26 @@
         </div>
       </div>
     <% } %>
+      </div>
+      <div class="dash-cols-side">
+        <div class="dash-side-card">
+          <h4>🎧 Support</h4>
+          <p>Hier bekommst du Hilfe vom pOky-Team — bei Fragen zum Bot oder Problemen mit einem Feature.</p>
+          <a href="mailto:poky-bot@web.de" class="btn btn-primary" style="text-decoration:none">🎧 Support kontaktieren</a>
+        </div>
+        <div class="dash-side-card">
+          <h4>📄 Rechtliches</h4>
+          <p>Alle Infos zur Nutzung von pOky und zum Umgang mit deinen Daten findest du hier.</p>
+          <a href="/terms" class="btn btn-secondary" style="text-decoration:none">📄 Nutzungsbedingungen</a>
+          <a href="/privacy" class="btn btn-secondary" style="text-decoration:none;margin-top:8px">🛡️ Datenschutzerklärung</a>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
 
 <script src="/js/animated-bg.js"></script>
+<script src="/js/mail-link.js"></script>
 <script>
 function filterGuilds() {
   var query = (document.getElementById('sidebar-search-input').value || '').toLowerCase();

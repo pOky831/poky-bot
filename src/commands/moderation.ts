@@ -6,7 +6,7 @@ import {
   User,
 } from "discord.js";
 import { stmts } from "../database/db.js";
-import { parseDuration } from "../utils/helpers.js";
+import { parseDuration, WARN_ROLE_NAMES, sendModLogEmbed } from "../utils/helpers.js";
 
 export const data = new SlashCommandBuilder()
   .setName("moderation")
@@ -87,7 +87,8 @@ async function logAction(
   action: string,
   reason: string | null,
   duration?: string | null
-): Promise<void> {    await stmts.insertModLog(
+): Promise<void> {
+    await stmts.insertModLog(
       guildId,
       target.id,
       target.tag,
@@ -97,6 +98,34 @@ async function logAction(
       reason ?? null,
       duration ?? null
     );
+}
+
+async function logAndEmbed(
+  guild: import("discord.js").Guild,
+  target: User,
+  moderator: User,
+  action: string,
+  reason: string | null,
+  duration?: string | null,
+  extraFields?: { name: string; value: string; inline?: boolean }[]
+): Promise<void> {
+  await logAction(guild.id, target, moderator, action, reason, duration);
+  const settings = await stmts.getGuildSettings(guild.id);
+  let extra = extraFields ?? [];
+  if (duration) {
+    extra = [...extra, { name: "Dauer", value: duration, inline: true }];
+  }
+  await sendModLogEmbed(
+    guild,
+    settings?.log_channel_id,
+    action,
+    target.tag,
+    target.id,
+    moderator.tag,
+    moderator.id,
+    reason,
+    extra
+  );
 }
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -123,7 +152,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     await member.kick(reason);
-    await logAction(interaction.guild.id, user, interaction.user, "Kick", reason);
+    await logAndEmbed(interaction.guild, user, interaction.user, "Kick", reason);
     await interaction.editReply(`🔨 **${user.tag}** wurde gekickt.\nGrund: ${reason}`);
     return;
   }
@@ -140,7 +169,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     await interaction.guild.members.ban(user, { deleteMessageSeconds: deleteDays * 24 * 60 * 60, reason });
-    await logAction(interaction.guild.id, user, interaction.user, "Ban", reason);
+    await logAndEmbed(interaction.guild, user, interaction.user, "Ban", reason, null, deleteDays > 0 ? [{ name: "Nachrichten gelöscht", value: `${deleteDays} Tag(e)`, inline: true }] : undefined);
     await interaction.editReply(`🔨 **${user.tag}** wurde gebannt.\nGrund: ${reason}`);
     return;
   }
@@ -167,7 +196,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     await member.timeout(durationMs, reason);
-    await logAction(interaction.guild.id, user, interaction.user, "Timeout", reason, durationStr);
+    await logAndEmbed(interaction.guild, user, interaction.user, "Timeout", reason, durationStr);
     await interaction.editReply(`⏱️ **${user.tag}** wurde für ${durationStr} getimeoutet.\nGrund: ${reason}`);
     return;
   }
@@ -184,7 +213,38 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       interaction.user.tag,
       reason
     );
-    await logAction(interaction.guild.id, user, interaction.user, "Warn", reason);
+    await logAndEmbed(interaction.guild, user, interaction.user, "Warn", reason);
+
+    // Assign warn roles on Discord
+    const member = interaction.guild.members.cache.get(user.id) ?? await interaction.guild.members.fetch(user.id).catch(() => null);
+    if (member) {
+      const warns = await stmts.getWarns(interaction.guild.id, user.id);
+      const warnCount = warns.length;
+      const cycleIndex = (warnCount - 1) % 4;
+
+      // Remove old warn roles first
+      const rolesToRemove = member.roles.cache.filter((r) => WARN_ROLE_NAMES.includes(r.name));
+      if (rolesToRemove.size > 0) {
+        await member.roles.remove(rolesToRemove, "Warn-Rollen aktualisiert").catch(() => {});
+      }
+
+      if (cycleIndex < 3) {
+        const roleName = WARN_ROLE_NAMES[cycleIndex];
+        let role = interaction.guild.roles.cache.find((r) => r.name === roleName);
+        if (!role) {
+          try {
+            role = await interaction.guild.roles.create({ name: roleName, color: 0xfaa81a, reason: "Warn-Rolle erstellt" });
+          } catch { /* no perms */ }
+        }
+        if (role) {
+          await member.roles.add(role, `Verwarnung ${warnCount} - ${roleName}`).catch(() => {});
+        }
+      } else {
+        // 4th warn: timeout 2 weeks
+        const twoWeeks = 14 * 24 * 60 * 60 * 1000;
+        await member.timeout(twoWeeks, `4. Verwarnung - 2 Wochen Timeout: ${reason}`).catch(() => {});
+      }
+    }
 
     const warnCount = (await stmts.getWarns(interaction.guild.id, user.id)).length;
     await interaction.editReply(`⚠️ **${user.tag}** wurde verwarnt.\nGrund: ${reason}\nVerwarnungen: ${warnCount}`);
@@ -211,6 +271,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const user = interaction.options.getUser("nutzer", true);
     const count = (await stmts.getWarns(interaction.guild.id, user.id)).length;
     await stmts.clearWarns(interaction.guild.id, user.id);
+    await logAndEmbed(interaction.guild, user, interaction.user, "Warns gelöscht", `${count} Verwarnungen gelöscht`);
     await interaction.editReply(`✅ Alle Verwarnungen für **${user.tag}** gelöscht (${count} Stück).`);
     return;
   }
@@ -225,6 +286,41 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
+    // Recalculate warn roles on Discord
+    const member = interaction.guild.members.cache.get(user.id) ?? await interaction.guild.members.fetch(user.id).catch(() => null);
+    if (member) {
+      const warns = await stmts.getWarns(interaction.guild.id, user.id);
+      const warnCount = warns.length;
+
+      // Remove all warn roles first
+      const rolesToRemove = member.roles.cache.filter((r) => WARN_ROLE_NAMES.includes(r.name));
+      if (rolesToRemove.size > 0) {
+        await member.roles.remove(rolesToRemove, "Warn-Rollen aktualisiert").catch(() => {});
+      }
+
+      if (warnCount > 0) {
+        const cycleIndex = (warnCount - 1) % 4;
+        if (cycleIndex < 3) {
+          const roleName = WARN_ROLE_NAMES[cycleIndex];
+          let role = interaction.guild.roles.cache.find((r) => r.name === roleName);
+          if (!role) {
+            try {
+              role = await interaction.guild.roles.create({ name: roleName, color: 0xfaa81a, reason: "Warn-Rolle erstellt" });
+            } catch { /* no perms */ }
+          }
+          if (role) {
+            await member.roles.add(role, `Verwarnung ${warnCount} - ${roleName}`).catch(() => {});
+          }
+        }
+      }
+
+      // Remove timeout if warn count no longer at 4th+ strike
+      if (warnCount % 4 !== 0 && member.communicationDisabledUntil) {
+        await member.timeout(null).catch(() => {});
+      }
+    }
+
+    await logAndEmbed(interaction.guild, user, interaction.user, "Warn entfernt", `Warn-ID #${warnId} entfernt`);
     await interaction.editReply(`🗑️ Verwarnung **#${warnId}** von **${user.tag}** wurde entfernt.`);
     return;
   }

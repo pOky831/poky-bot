@@ -2,6 +2,7 @@ import {
   ChatInputCommandInteraction,
   ButtonInteraction,
   StringSelectMenuInteraction,
+  ModalSubmitInteraction,
   Interaction,
   MessageFlags,
   ChannelType,
@@ -11,10 +12,15 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  EmbedBuilder,
 } from "discord.js";
 import { commands } from "../bot.js";
 import { handleGiveawayButton } from "../commands/giveaway.js";
 import { stmts } from "../database/db.js";
+import { buildTicketTranscript, sendTranscriptToLog } from "../utils/helpers.js";
 
 export async function handleInteractionCreate(interaction: Interaction): Promise<void> {
   if (interaction.isChatInputCommand()) {
@@ -82,6 +88,23 @@ export async function handleInteractionCreate(interaction: Interaction): Promise
     }
     return;
   }
+
+  if (interaction.isModalSubmit()) {
+    if (interaction.customId.startsWith("ticket_close_modal_")) {
+      try {
+        await handleTicketCloseModal(interaction);
+      } catch (error) {
+        console.error("❌ Fehler bei Ticket-Close-Modal:", error);
+        const reply = { content: "Ein Fehler ist aufgetreten.", flags: MessageFlags.Ephemeral as number };
+        if (interaction.replied || interaction.deferred) {
+          await interaction.editReply(reply);
+        } else {
+          await interaction.reply(reply);
+        }
+      }
+    }
+    return;
+  }
 }
 
 async function handleTicketCloseButton(interaction: ButtonInteraction): Promise<void> {
@@ -104,11 +127,60 @@ async function handleTicketCloseButton(interaction: ButtonInteraction): Promise<
     return;
   }
 
-  await stmts.closeTicket(interaction.user.id, interaction.user.tag, "Per Button geschlossen", channelId);
+  // Show modal to ask for close reason
+  const modal = new ModalBuilder()
+    .setCustomId(`ticket_close_modal_${channelId}`)
+    .setTitle("Ticket schließen");
+
+  const reasonInput = new TextInputBuilder()
+    .setCustomId("close_reason")
+    .setLabel("Grund für das Schließen")
+    .setStyle(TextInputStyle.Paragraph)
+    .setPlaceholder("Optional: Grund für das Schließen angeben...")
+    .setRequired(false)
+    .setMaxLength(500);
+
+  const row = new ActionRowBuilder<TextInputBuilder>().addComponents(reasonInput);
+  modal.addComponents(row);
+
+  await interaction.showModal(modal);
+}
+
+async function handleTicketCloseModal(interaction: ModalSubmitInteraction): Promise<void> {
+  const channelId = interaction.customId.replace("ticket_close_modal_", "");
+  const channel = interaction.channel as TextChannel | null;
+  const guild = interaction.guild;
+
+  if (!channel || !guild) {
+    await interaction.reply({ content: "Kanal nicht gefunden.", ephemeral: true });
+    return;
+  }
+
+  const closeReason = interaction.fields.getTextInputValue("close_reason").trim() || "Kein Grund angegeben";
+
+  // Save transcript before closing
+  const transcriptContent = await buildTicketTranscript(
+    channel,
+    channelId,
+    interaction.user.tag,
+    closeReason
+  );
+
+  // Send transcript to log channel if configured
+  const settings = await stmts.getGuildSettings(guild.id);
+  await sendTranscriptToLog(
+    guild,
+    settings?.ticket_log_channel_id ?? null,
+    transcriptContent,
+    channelId,
+    interaction.user.tag,
+    closeReason
+  );
+
+  await stmts.closeTicket(interaction.user.id, interaction.user.tag, closeReason, channelId);
 
   await interaction.reply({ content: "🔒 Ticket wird gelöscht...", ephemeral: true });
 
-  // Delete the channel after a short delay (NOT logged to ticket_log_channel)
   setTimeout(() => {
     channel?.delete().catch(() => {});
   }, 3000);
@@ -123,9 +195,25 @@ async function handleTicketSelect(interaction: StringSelectMenuInteraction): Pro
 
   const selectedOption = interaction.values[0];
 
+  // Bestimme die Ticket-Kategorie:
+  // 1) guild_settings.ticket_category_id (vom /ticket setup Befehl)
+  // 2) Fallback: Parent-Kategorie des Ticket-Panel-Kanals
   const settings = await stmts.getGuildSettings(guild.id);
-  if (!settings?.ticket_category_id) {
-    await interaction.reply({ content: "Ticket-System ist nicht eingerichtet. Ein Admin muss es konfigurieren.", ephemeral: true });
+  let categoryId: string | null = settings?.ticket_category_id ?? null;
+
+  if (!categoryId) {
+    // Fallback: Ticket-Panel-Kanal ermitteln und dessen Parent nutzen
+    const panel = await stmts.getTicketPanel(guild.id);
+    if (panel) {
+      const panelChannel = await guild.channels.fetch(panel.channel_id).catch(() => null);
+      if (panelChannel && "parentId" in panelChannel && panelChannel.parentId) {
+        categoryId = panelChannel.parentId;
+      }
+    }
+  }
+
+  if (!categoryId) {
+    await interaction.reply({ content: "Ticket-System ist nicht eingerichtet. Ein Admin muss es über das Dashboard oder `/ticket setup` konfigurieren.", ephemeral: true });
     return;
   }
 
@@ -139,7 +227,7 @@ async function handleTicketSelect(interaction: StringSelectMenuInteraction): Pro
     return;
   }
 
-  const category = await guild.channels.fetch(settings.ticket_category_id).catch(() => null);
+  const category = await guild.channels.fetch(categoryId).catch(() => null);
   if (!category || category.type !== ChannelType.GuildCategory) {
     await interaction.editReply("Ticket-Kategorie nicht gefunden. Bitte neu einrichten.");
     return;
@@ -199,7 +287,7 @@ async function handleTicketSelect(interaction: StringSelectMenuInteraction): Pro
   await interaction.editReply(`Ticket erstellt: <#${ticketChannel.id}>`);
 
   // Log
-  if (settings.ticket_log_channel_id) {
+  if (settings?.ticket_log_channel_id) {
     const logChannel = guild.channels.cache.get(settings.ticket_log_channel_id) as TextChannel | undefined;
     if (logChannel?.send) {
       await logChannel.send(

@@ -3,16 +3,18 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy as DiscordStrategy } from "passport-discord";
 import { resolve } from "node:path";
-import { Client } from "discord.js";
+import { Client, StringSelectMenuBuilder, ActionRowBuilder, EmbedBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { client, stmts } from "../database/db.js";
 import type { GuildSettings, ModLog, Ticket, GuildCacheEntry, Giveaway, MemberNote } from "../database/db.js";
-import { timestampToDate } from "../utils/helpers.js";
+import { timestampToDate, WARN_ROLE_NAMES, sendModLogEmbed } from "../utils/helpers.js";
+import { musicManager } from "../music/musicPlayer.js";
 
 let botClient: Client | null = null;
 
 const app = express();
 app.set("trust proxy", 1);
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : (process.env.DASHBOARD_PORT ? parseInt(process.env.DASHBOARD_PORT, 10) : 3000);
+const DEV_PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : (process.env.DASHBOARD_PORT ? parseInt(process.env.DASHBOARD_PORT, 10) : DEV_PORT);
 const CALLBACK_URL = process.env.DASHBOARD_CALLBACK_URL ?? `http://localhost:${PORT}/auth/discord/callback`;
 
 // EJS setup
@@ -101,6 +103,20 @@ app.get("/api/stats", async (_req, res) => {
 // Routes
 app.get("/", (req, res) => {
   res.render("index", { user: req.user as DiscordUser | undefined, clientId: process.env.CLIENT_ID });
+});
+
+// Public legal pages (required for Discord bot verification)
+app.get("/terms", (_req, res) => {
+  res.render("terms");
+});
+
+app.get("/privacy", (_req, res) => {
+  res.render("privacy");
+});
+
+// Public features page
+app.get("/funktionen", (req, res) => {
+  res.render("funktionen", { user: req.user as DiscordUser | undefined });
 });
 
 app.get("/login", passport.authenticate("discord"));
@@ -486,6 +502,8 @@ app.post("/api/guild/:id/members/:userId/timeout", ensureAuth, async (req, res) 
 
     await member.timeout(durationMs, timeoutReason);
     await stmts.insertModLog(guildId, userId, member.user.tag, user.id, user.username, "Timeout", timeoutReason, `${Math.round(durationMs / 1000)}s`);
+    const timeoutSettings = await stmts.getGuildSettings(guildId);
+    await sendModLogEmbed(guild, timeoutSettings?.log_channel_id, "Timeout", member.user.tag, userId, user.username, user.id, timeoutReason, [{ name: "Dauer", value: `${Math.round(durationMs / 60000)} Minuten`, inline: true }]);
 
     res.json({ success: true, until: new Date(Date.now() + durationMs).toISOString() });
   } catch (err) {
@@ -513,6 +531,8 @@ app.post("/api/guild/:id/members/:userId/untimeout", ensureAuth, async (req, res
 
     await member.timeout(null);
     await stmts.insertModLog(guildId, userId, member.user.tag, user.id, user.username, "Untimeout", "Timeout aufgehoben", null);
+    const untimeoutSettings = await stmts.getGuildSettings(guildId);
+    await sendModLogEmbed(guild, untimeoutSettings?.log_channel_id, "Untimeout", member.user.tag, userId, user.username, user.id, "Timeout aufgehoben");
 
     res.json({ success: true });
   } catch (err) {
@@ -583,9 +603,6 @@ app.delete("/api/guild/:id/members/:userId/notes/:noteId", ensureAuth, async (re
   res.json({ success: true });
 });
 
-// Warn-Rollen Namen
-const WARN_ROLE_NAMES = ["1-Warn", "2-Warn", "3-Warn"];
-
 async function findOrCreateWarnRole(guild: import("discord.js").Guild, roleName: string): Promise<import("discord.js").Role | null> {
   let role = guild.roles.cache.find((r) => r.name === roleName);
   if (!role) {
@@ -623,6 +640,40 @@ app.delete("/api/guild/:id/members/:userId/warns/:warnId", ensureAuth, async (re
   const deleted = await stmts.removeWarn(warnId, guildId);
   if (!deleted) return res.status(404).json({ error: "Warn nicht gefunden." });
 
+  // Recalculate warn roles on Discord
+  if (botClient) {
+    try {
+      const discGuild = botClient.guilds.cache.get(guildId);
+      if (discGuild) {
+        const userId = Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId;
+        const member = await discGuild.members.fetch(userId).catch(() => null);
+        if (member) {
+          const warns = await stmts.getWarns(guildId, userId);
+          const warnCount = warns.length;
+          await removeAllWarnRoles(member);
+          if (warnCount > 0) {
+            const cycleIndex = (warnCount - 1) % 4;
+            if (cycleIndex < 3) {
+              const roleName = WARN_ROLE_NAMES[cycleIndex];
+              const role = await findOrCreateWarnRole(discGuild, roleName);
+              if (role) {
+                await member.roles.add(role, `Verwarnung ${warnCount} - ${roleName}`).catch(() => {});
+              }
+            }
+          }
+          if (warnCount % 4 !== 0 && member.communicationDisabledUntil) {
+            await member.timeout(null).catch(() => {});
+          }
+          // Send mod-log embed
+          const warnRmSettings = await stmts.getGuildSettings(guildId);
+          await sendModLogEmbed(discGuild, warnRmSettings?.log_channel_id, "Warn entfernt", member.user.tag, userId, user.username, user.id, `Warn-ID #${warnId} entfernt`);
+        }
+      }
+    } catch (e) {
+      console.error("Fehler beim Rekalibrieren der Warn-Rollen:", e);
+    }
+  }
+
   res.json({ success: true });
 });
 
@@ -648,6 +699,8 @@ app.post("/api/guild/:id/members/:userId/warn", ensureAuth, async (req, res) => 
     // Insert warn into DB
     await stmts.insertWarn(guildId, userId, member.user.tag, user.id, user.username, warnReason);
     await stmts.insertModLog(guildId, userId, member.user.tag, user.id, user.username, "Warn", warnReason, null);
+    const warnSettings = await stmts.getGuildSettings(guildId);
+    await sendModLogEmbed(guild, warnSettings?.log_channel_id, "Warn", member.user.tag, userId, user.username, user.id, warnReason);
 
     const warnCount = (await stmts.getWarns(guildId, userId)).length;
     const cycleIndex = (warnCount - 1) % 4; // 0,1,2,3
@@ -683,7 +736,8 @@ app.post("/api/guild/:id/members/:userId/warn", ensureAuth, async (req, res) => 
 app.get("/api/guild/:id/tickets/channels", ensureAuth, async (req, res) => {
   const user = req.user as DiscordUser;
   const guildId = validateGuildAccess(req, res, user);
-  if (!guildId || !botClient) return res.json([]);
+  if (!guildId) return; // validateGuildAccess already sent error response
+  if (!botClient) return res.json([]);
   try {
     const guild = botClient.guilds.cache.get(guildId);
     if (!guild) return res.json([]);
@@ -734,8 +788,22 @@ app.post("/api/guild/:id/tickets/panel", ensureAuth, async (req, res) => {
     await stmts.setTicketPanel(guildId, channelId, null);
     await stmts.setTicketPanelOptions(guildId, options);
 
+    // Also save ticket_category_id from panel channel's parent category
+    const panelChannel = guild.channels.cache.get(channelId);
+    if (panelChannel && "parentId" in panelChannel && panelChannel.parentId) {
+      const existingSettings = await stmts.getGuildSettings(guildId);
+      await stmts.setGuildSettings(
+        guildId,
+        existingSettings?.welcome_channel_id ?? null,
+        panelChannel.parentId,
+        existingSettings?.ticket_log_channel_id ?? null,
+        existingSettings?.mod_role_id ?? null,
+        existingSettings?.log_channel_id ?? null,
+        existingSettings?.automod_enabled ?? 0
+      );
+    }
+
     // Send/update embed in Discord
-    const { StringSelectMenuBuilder, ActionRowBuilder, EmbedBuilder, StringSelectMenuOptionBuilder } = await import("discord.js");
     const channel = guild.channels.cache.get(channelId);
     if (!channel || !channel.isTextBased() || "send" in channel === false) {
       return res.status(500).json({ error: "Kanal nicht gefunden." });
@@ -858,6 +926,246 @@ app.get("/api/guild/:id/tickets/:channelId/messages", ensureAuth, async (req, re
     console.error("Fehler beim Abrufen der Ticket-Nachrichten:", err);
     res.status(500).json({ error: "Nachrichten konnten nicht geladen werden." });
   }
+});
+
+// API: Mod-Log Channel
+app.post("/api/guild/:id/modlog-channel", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId) return;
+  const { channelId } = req.body as { channelId: string };
+  const existing = await stmts.getGuildSettings(guildId);
+  await stmts.setGuildSettings(
+    guildId,
+    existing?.welcome_channel_id ?? null,
+    existing?.ticket_category_id ?? null,
+    existing?.ticket_log_channel_id ?? null,
+    existing?.mod_role_id ?? null,
+    channelId || null,
+    existing?.automod_enabled ?? 0
+  );
+  res.json({ success: true });
+});
+
+// API: Get text channels (for messages tab & mod-log picker)
+app.get("/api/guild/:id/channels", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId) return; // validateGuildAccess already sent error response
+  if (!botClient) return res.json([]);
+  try {
+    const guild = botClient.guilds.cache.get(guildId);
+    if (!guild) return res.json([]);
+    const channels = guild.channels.cache
+      .filter((c) => c.isTextBased() && !c.isThread())
+      .map((c) => ({ id: c.id, name: c.name }));
+    res.json(channels);
+  } catch { res.json([]); }
+});
+
+app.post("/api/guild/:id/messages/send", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId || !botClient) return res.status(500).json({ error: "Bot nicht verbunden." });
+
+  const { channelId, title, description, color, imageUrl, footerText } = req.body as {
+    channelId: string;
+    title?: string;
+    description?: string;
+    color?: string;
+    imageUrl?: string;
+    footerText?: string;
+  };
+
+  if (!channelId) return res.status(400).json({ error: "channelId benötigt." });
+  if (!title?.trim() && !description?.trim()) return res.status(400).json({ error: "Titel oder Beschreibung benötigt." });
+
+  try {
+    const guild = botClient.guilds.cache.get(guildId);
+    if (!guild) return res.status(404).json({ error: "Server nicht gefunden." });
+    const channel = guild.channels.cache.get(channelId);
+    if (!channel || !channel.isTextBased()) return res.status(404).json({ error: "Kanal nicht gefunden." });
+    if (!("send" in channel)) return res.status(500).json({ error: "Keine Schreibrechte im Kanal." });
+
+    const embed = new EmbedBuilder();
+    if (title?.trim()) embed.setTitle(title.trim());
+    if (description?.trim()) embed.setDescription(description.trim());
+    if (color) embed.setColor(parseInt(color.replace("#", ""), 16) || 0xff5e8a);
+    if (imageUrl?.trim()) embed.setImage(imageUrl.trim());
+    if (footerText?.trim()) embed.setFooter({ text: footerText.trim() });
+    embed.setTimestamp();
+
+    await (channel as any).send({ embeds: [embed] });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Fehler beim Senden der Nachricht:", err);
+    res.status(500).json({ error: "Fehler beim Senden." });
+  }
+});
+
+// ═══════════════════════════════════════════
+// API: Music
+// ═══════════════════════════════════════════
+
+app.get("/api/guild/:id/music/status", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId || !botClient) return;
+
+  try {
+    const guild = botClient.guilds.cache.get(guildId);
+    if (!guild) return res.status(404).json({ error: "Server nicht gefunden." });
+    const status = musicManager.getStatus(guildId);
+    res.json(status);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/guild/:id/music/channels", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId || !botClient) return;
+
+  try {
+    const guild = botClient.guilds.cache.get(guildId);
+    if (!guild) return res.status(404).json({ error: "Server nicht gefunden." });
+    const channels = musicManager.getVoiceChannels(guild);
+    res.json(channels);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/guild/:id/music/play", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId || !botClient) return;
+
+  const { query, voiceChannelId } = req.body as { query: string; voiceChannelId: string };
+  if (!query?.trim() || !voiceChannelId?.trim()) {
+    return res.status(400).json({ error: "query und voiceChannelId benötigt." });
+  }
+
+  try {
+    const guild = botClient.guilds.cache.get(guildId);
+    if (!guild) return res.status(404).json({ error: "Server nicht gefunden." });
+
+    const track = await musicManager.play(
+      guild,
+      query.trim(),
+      voiceChannelId,
+      "", // no text channel from dashboard
+      user.id,
+      user.username
+    );
+    res.json({ success: true, track });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Fehler beim Abspielen." });
+  }
+});
+
+app.post("/api/guild/:id/music/skip", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId || !botClient) return;
+
+  try {
+    const guild = botClient.guilds.cache.get(guildId);
+    if (!guild) return res.status(404).json({ error: "Server nicht gefunden." });
+    const skipped = musicManager.skip(guild);
+    res.json({ success: true, skipped });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/guild/:id/music/stop", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId || !botClient) return;
+
+  try {
+    const guild = botClient.guilds.cache.get(guildId);
+    if (!guild) return res.status(404).json({ error: "Server nicht gefunden." });
+    musicManager.stop(guild);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/guild/:id/music/pause", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId || !botClient) return;
+
+  try {
+    const guild = botClient.guilds.cache.get(guildId);
+    if (!guild) return res.status(404).json({ error: "Server nicht gefunden." });
+    musicManager.pause(guild);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/guild/:id/music/resume", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId || !botClient) return;
+
+  try {
+    const guild = botClient.guilds.cache.get(guildId);
+    if (!guild) return res.status(404).json({ error: "Server nicht gefunden." });
+    musicManager.resume(guild);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/guild/:id/music/volume", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId || !botClient) return;
+
+  const { volume } = req.body as { volume: number };
+  if (typeof volume !== "number" || isNaN(volume)) {
+    return res.status(400).json({ error: "volume muss eine Zahl sein." });
+  }
+
+  try {
+    const guild = botClient.guilds.cache.get(guildId);
+    if (!guild) return res.status(404).json({ error: "Server nicht gefunden." });
+    const newVol = musicManager.setVolume(guild, volume);
+    res.json({ success: true, volume: newVol });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/guild/:id/music/queue/remove", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId) return;
+
+  const { index } = req.body as { index: number };
+  if (typeof index !== "number" || index < 0) {
+    return res.status(400).json({ error: "Ungültiger Index." });
+  }
+
+  const removed = musicManager.removeFromQueue(guildId, index);
+  res.json({ success: !!removed });
+});
+
+app.post("/api/guild/:id/music/queue/clear", ensureAuth, async (req, res) => {
+  const user = req.user as DiscordUser;
+  const guildId = validateGuildAccess(req, res, user);
+  if (!guildId) return;
+
+  musicManager.clearQueue(guildId);
+  res.json({ success: true });
 });
 
 // Global error handler

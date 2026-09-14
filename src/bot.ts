@@ -6,10 +6,14 @@ import * as ticketCommand from "./commands/ticket.js";
 import * as automodCommand from "./commands/automod.js";
 import * as levelingCommand from "./commands/leveling.js";
 import * as giveawayCommand from "./commands/giveaway.js";
+import * as botinfoCommand from "./commands/botinfo.js";
+import * as musicCommand from "./commands/music.js";
 import { handleReady } from "./events/ready.js";
 import { handleGuildCreate } from "./events/guildCreate.js";
 import { handleInteractionCreate } from "./events/interactionCreate.js";
 import { handleMessageCreate } from "./events/messageCreate.js";
+import { handleGuildMemberAdd } from "./events/guildMemberAdd.js";
+import { handleVoiceStateUpdate } from "./events/voiceStateUpdate.js";
 
 export interface Command {
   data: SlashCommandBuilder | Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">;
@@ -24,6 +28,8 @@ export const commands: Command[] = [
   automodCommand as unknown as Command,
   levelingCommand as unknown as Command,
   giveawayCommand as unknown as Command,
+  botinfoCommand as unknown as Command,
+  musicCommand as unknown as Command,
 ];
 
 export function createBotClient(): Client {
@@ -33,6 +39,7 @@ export function createBotClient(): Client {
       GatewayIntentBits.GuildMembers,
       GatewayIntentBits.GuildMessages,
       GatewayIntentBits.MessageContent,
+      GatewayIntentBits.GuildVoiceStates,
     ],
   });
 
@@ -42,6 +49,8 @@ export function createBotClient(): Client {
     handleInteractionCreate(interaction);
   });
   client.on(Events.MessageCreate, handleMessageCreate);
+  client.on(Events.GuildMemberAdd, handleGuildMemberAdd);
+  client.on(Events.VoiceStateUpdate, handleVoiceStateUpdate);
 
   return client;
 }
