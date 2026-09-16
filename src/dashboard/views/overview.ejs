@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Übersicht | HamburgNCRP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f0f4ff 0%, #dde7f9 100%);
+      color: #1a1a2e;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+    }
+
+    .overview-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 30px 20px 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .overview-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 18px;
+      margin-bottom: 40px;
+      border-bottom: 2px solid rgba(59, 130, 246, 0.12);
+    }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-svg {
+      width: 40px;
+      height: 40px;
+    }
+
+    .logo-text {
+      font-size: 26px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .header-right {
+      /* Bleibt leer – kein pinkes Viereck, kein Text */
+    }
+
+    .overview-hero {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .overview-hero h1 {
+      font-size: 36px;
+      font-weight: 800;
+      color: #1e3a8a;
+      margin-bottom: 8px;
+    }
+
+    .overview-hero p {
+      font-size: 15px;
+      color: #555;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      width: 100%;
+    }
+
+    .dashboard-card.kirby {
+      background: linear-gradient(145deg, #ffffff, #f0f7ff);
+      border: 3px solid #3b82f6;
+      border-radius: 22px;
+      padding: 24px 22px;
+      text-align: center;
+      box-shadow: 0 10px 24px rgba(59, 130, 246, 0.12);
+      transition: all 0.3s ease;
+      animation: fadeInUp 0.5s ease forwards;
+      opacity: 0;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      max-width: 360px;
+      position: relative;
+    }
+
+    .dashboard-card.kirby .kirby-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 14px;
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      border-radius: 50%;
+      position: relative;
+      box-shadow: 0 6px 14px rgba(59, 130, 246, 0.25);
+    }
+
+    .dashboard-card.kirby .kirby-icon .eyes {
+      position: absolute;
+      top: 20px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 14px;
+    }
+
+    .dashboard-card.kirby .kirby-icon .eyes span {
+      width: 10px;
+      height: 10px;
+      background: #1e3a8a;
+      border-radius: 50%;
+    }
+
+    .dashboard-card.kirby .kirby-icon .blush {
+      position: absolute;
+      top: 36px;
+      width: 16px;
+      height: 8px;
+      background: rgba(255, 150, 200, 0.35);
+      border-radius: 50%;
+    }
+
+    .dashboard-card.kirby .kirby-icon .blush.left {
+      left: 10px;
+    }
+
+    .dashboard-card.kirby .kirby-icon .blush.right {
+      right: 10px;
+    }
+
+    .dashboard-card.kirby .kirby-icon .mouth {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 8px;
+      border-bottom: 3px solid #1e3a8a;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .dashboard-card.kirby h2 {
+      color: #1e3a8a;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .dashboard-card.kirby p {
+      color: #4a5568;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .dashboard-card.kirby .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      color: #fff;
+      border-radius: 40px;
+      padding: 10px 22px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 6px 14px rgba(59, 130, 246, 0.25);
+      transition: all 0.3s ease;
+    }
+
+    .dashboard-card.kirby .btn:hover {
+      transform: scale(1.04);
+      box-shadow: 0 8px 18px rgba(59, 130, 246, 0.35);
+    }
+
+    .dashboard-card.ncrp {
+      background: linear-gradient(145deg, #ffffff, #f0fff4);
+      border: 3px solid #22c55e;
+      border-radius: 22px;
+      padding: 24px 22px;
+      text-align: center;
+      box-shadow: 0 10px 24px rgba(34, 197, 94, 0.12);
+      transition: all 0.3s ease;
+      animation: fadeInUp 0.5s ease forwards;
+      opacity: 0;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      max-width: 360px;
+      position: relative;
+    }
+
+    .dashboard-card.ncrp .ncrp-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 14px;
+      background: linear-gradient(135deg, #22c55e, #4ade80);
+      border-radius: 50%;
+      color: #fff;
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 64px;
+      box-shadow: 0 6px 14px rgba(34, 197, 94, 0.25);
+    }
+
+    .dashboard-card.ncrp h2 {
+      color: #166534;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .dashboard-card.ncrp p {
+      color: #4a5568;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .dashboard-card.ncrp .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #22c55e, #4ade80);
+      color: #fff;
+      border-radius: 40px;
+      padding: 10px 22px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 6px 14px rgba(34, 197, 94, 0.25);
+      transition: all 0.3s ease;
+    }
+
+    .dashboard-card.ncrp .btn:hover {
+      transform: scale(1.04);
+      box-shadow: 0 8px 18px rgba(34, 197, 94, 0.35);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .footer {
+      margin-top: 50px;
+      color: #666;
+      font-size: 12px;
+      text-align: center;
+      padding-top: 16px;
+      border-top: 1px solid rgba(59, 130, 246, 0.08);
+    }
+
+    @media (max-width: 768px) {
+      .overview-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+      }
+
+      .overview-hero h1 {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="overview-container">
+    <header class="overview-header">
+      <div class="logo-wrap">
+        <span class="logo-text">HamburgNCRP</span>
+      </div>
+      <div class="header-right"></div>
+    </header>
+
+    <main class="overview-content">
+      <div class="overview-hero">
+        <h1>Dashboard Übersicht</h1>
+        <p>Wähle ein Dashboard aus, um es zu öffnen</p>
+      </div>
+
+      <div class="dashboard-grid">
+        <% dashboards.forEach(function(dashboard, i) { %>
+          <% if (dashboard.id === 'poky') { %>
+            <a href="<%= dashboard.url %>" class="dashboard-card kirby" style="animation-delay: <%= 0.08 + i * 0.1 %>s">
+              <div class="kirby-icon">
+                <div class="eyes">
+                  <span></span>
+                  <span></span>
+                </div>
+                <span class="blush left"></span>
+                <span class="blush right"></span>
+                <div class="mouth"></div>
+              </div>
+              <h2><%= dashboard.name %></h2>
+              <p><%= dashboard.description %></p>
+              <span class="btn">Dashboard öffnen →</span>
+            </a>
+          <% } else { %>
+            <a href="<%= dashboard.url %>" class="dashboard-card ncrp" style="animation-delay: <%= 0.08 + i * 0.1 %>s">
+              <div class="ncrp-icon">A</div>
+              <h2><%= dashboard.name %></h2>
+              <p><%= dashboard.description %></p>
+              <span class="btn">Dashboard öffnen →</span>
+            </a>
+          <% } %>
+        <% }) %>
+      </div>
+    </main>
+
+    <div class="footer">
+      <p>© 2026 HamburgNCRP</p>
+    </div>
+  </div>
+
+  <script>
+    try { localStorage.removeItem('poky-theme'); } catch (e) { /* ignore */ }
+  </script>
+</body>
+</html>
